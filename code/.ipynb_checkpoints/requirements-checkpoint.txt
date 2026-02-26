@@ -1,0 +1,9 @@
+pandas == 2.3.3
+pyarrow == 21.0.0
+pytz
+statistics
+datetime
+numpy
+clifpy
+comorbidipy
+polars
