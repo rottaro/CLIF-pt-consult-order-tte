@@ -1,0 +1,11 @@
+primary_blocker,encounter_count,proportion,criteria_name,site_name
+green_resp_spo2_flag,588,0.2559860687853722,Green,mimic
+green_fio2_flag,558,0.24292555507183283,Green,mimic
+green_map_flag,449,0.195472355245973,Green,mimic
+paralytics_flag,170,0.07400957771005659,Green,mimic
+green_pulse_flag,146,0.06356116673922507,Green,mimic
+hourly_trach,145,0.0631258162821071,Green,mimic
+green_resp_rate_flag,110,0.047888550282977796,Green,mimic
+green_peep_flag,76,0.03308663474096648,Green,mimic
+green_lactate_flag,46,0.02002612102742708,Green,mimic
+green_hr_flag,9,0.00391815411406182,Green,mimic

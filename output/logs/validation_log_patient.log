@@ -1,0 +1,14 @@
+2026-03-24 14:22:52,809 - clifpy.tables.patient - INFO - Initialized patient table
+2026-03-24 14:22:52,810 - clifpy.tables.patient - INFO - Data directory: /nfs/roberts/project/pi_sj692/shared/mimicclif
+2026-03-24 14:22:52,810 - clifpy.tables.patient - INFO - File type: parquet
+2026-03-24 14:22:52,811 - clifpy.tables.patient - INFO - Timezone: America/New_York
+2026-03-24 14:22:52,812 - clifpy.tables.patient - INFO - Output directory: /nfs/roberts/project/pi_sj692/shared/PT_consults/output
+2026-03-24 14:22:52,818 - clifpy.tables.patient - INFO - Loaded schema from /nfs/roberts/project/pi_sj692/gcr22/clifenv/lib/python3.12/site-packages/clifpy/schemas/patient_schema.yaml
+2026-03-24 14:22:52,844 - clifpy.tables.patient - INFO - Loaded outlier configuration
+2026-03-24 14:22:53,159 - clifpy.tables.patient - INFO - Initialized patient table
+2026-03-24 14:22:53,160 - clifpy.tables.patient - INFO - Data directory: /nfs/roberts/project/pi_sj692/shared/mimicclif
+2026-03-24 14:22:53,161 - clifpy.tables.patient - INFO - File type: parquet
+2026-03-24 14:22:53,161 - clifpy.tables.patient - INFO - Timezone: America/New_York
+2026-03-24 14:22:53,162 - clifpy.tables.patient - INFO - Output directory: /nfs/roberts/project/pi_sj692/shared/PT_consults/output
+2026-03-24 14:22:53,167 - clifpy.tables.patient - INFO - Loaded schema from /nfs/roberts/project/pi_sj692/gcr22/clifenv/lib/python3.12/site-packages/clifpy/schemas/patient_schema.yaml
+2026-03-24 14:22:53,193 - clifpy.tables.patient - INFO - Loaded outlier configuration

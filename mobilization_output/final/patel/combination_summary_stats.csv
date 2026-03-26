@@ -1,0 +1,2 @@
+criteria_name,site_name,total_failed_encounters,unique_combinations,most_common_combination,most_common_count,combinations_affecting_50pct
+Patel,mimic,958,24,patel_map_flag:1|patel_sbp_flag:0|patel_pulse_flag:0|patel_resp_rate_flag:0|patel_spo2_flag:0|patel_resp_flag:1|patel_cardio_flag:1|hourly_trach:1|paralytics_flag:1,167,4

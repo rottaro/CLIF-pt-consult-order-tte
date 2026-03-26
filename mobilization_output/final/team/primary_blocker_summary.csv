@@ -1,0 +1,8 @@
+primary_blocker,encounter_count,proportion,criteria_name,site_name
+team_pulse_flag,540,0.3054298642533937,TEAM,mimic
+team_ne_flag,532,0.3009049773755656,TEAM,mimic
+team_fio2_flag,391,0.22115384615384615,TEAM,mimic
+paralytics_flag,137,0.07748868778280543,TEAM,mimic
+hourly_trach,112,0.06334841628959276,TEAM,mimic
+team_lactate_flag,36,0.020361990950226245,TEAM,mimic
+team_peep_flag,20,0.011312217194570135,TEAM,mimic

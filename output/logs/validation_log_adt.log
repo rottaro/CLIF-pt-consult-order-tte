@@ -1,0 +1,14 @@
+2026-03-24 14:22:50,248 - clifpy.tables.adt - INFO - Initialized adt table
+2026-03-24 14:22:50,249 - clifpy.tables.adt - INFO - Data directory: /nfs/roberts/project/pi_sj692/shared/mimicclif
+2026-03-24 14:22:50,250 - clifpy.tables.adt - INFO - File type: parquet
+2026-03-24 14:22:50,250 - clifpy.tables.adt - INFO - Timezone: America/New_York
+2026-03-24 14:22:50,251 - clifpy.tables.adt - INFO - Output directory: /nfs/roberts/project/pi_sj692/shared/PT_consults/output
+2026-03-24 14:22:50,255 - clifpy.tables.adt - INFO - Loaded schema from /nfs/roberts/project/pi_sj692/gcr22/clifenv/lib/python3.12/site-packages/clifpy/schemas/adt_schema.yaml
+2026-03-24 14:22:50,283 - clifpy.tables.adt - INFO - Loaded outlier configuration
+2026-03-24 14:22:51,730 - clifpy.tables.adt - INFO - Initialized adt table
+2026-03-24 14:22:51,731 - clifpy.tables.adt - INFO - Data directory: /nfs/roberts/project/pi_sj692/shared/mimicclif
+2026-03-24 14:22:51,731 - clifpy.tables.adt - INFO - File type: parquet
+2026-03-24 14:22:51,732 - clifpy.tables.adt - INFO - Timezone: America/New_York
+2026-03-24 14:22:51,732 - clifpy.tables.adt - INFO - Output directory: /nfs/roberts/project/pi_sj692/shared/PT_consults/output
+2026-03-24 14:22:51,736 - clifpy.tables.adt - INFO - Loaded schema from /nfs/roberts/project/pi_sj692/gcr22/clifenv/lib/python3.12/site-packages/clifpy/schemas/adt_schema.yaml
+2026-03-24 14:22:51,762 - clifpy.tables.adt - INFO - Loaded outlier configuration

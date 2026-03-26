@@ -3,6 +3,9 @@
     "mimic":"/nfs/roberts/project/pi_sj692/shared/mimiciv",
     "mob":"/nfs/roberts/project/pi_sj692/shared/PT_consults/mobilization_output",
     "output":"/nfs/roberts/project/pi_sj692/shared/PT_consults/output",
-    "use_mimic":1
+    "time_zone":"America/New_York",
+    "use_mimic":1,
+    "time_bin_size":4,
+    "time_end":48
 }
     

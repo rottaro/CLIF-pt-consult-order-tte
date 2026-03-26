@@ -1,0 +1,9 @@
+criterion,prop_hours_failed,encounters_never_met,encounter_failure_rate,total_failed_encounters,criteria_name,site_name,total_encounters,failed_encounters
+paralytics_flag,0.9832379340885957,1516,0.8574660633484162,1768,TEAM,mimic,32117,1768
+hourly_trach,0.6471638002828929,1629,0.9213800904977375,1768,TEAM,mimic,32117,1768
+team_fio2_flag,0.3910135233386651,562,0.3178733031674208,1768,TEAM,mimic,32117,1768
+team_lactate_flag,0.3677872222295663,378,0.21380090497737556,1768,TEAM,mimic,32117,1768
+team_ne_flag,0.2236704694171613,0,0.0,1768,TEAM,mimic,32117,1768
+team_peep_flag,0.06427221172022685,21,0.011877828054298642,1768,TEAM,mimic,32117,1768
+team_pulse_flag,0.008195962827342789,0,0.0,1768,TEAM,mimic,32117,1768
+team_resp_rate_flag,0.0015466575012888812,0,0.0,1768,TEAM,mimic,32117,1768

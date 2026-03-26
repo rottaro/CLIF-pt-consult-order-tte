@@ -1,0 +1,9 @@
+,prop_blocks_failed
+green_hr_flag,0.05851063829787234
+green_lactate_flag,0.1702127659574468
+green_peep_flag,0.2632978723404255
+green_pulse_flag,0.28191489361702127
+green_resp_spo2_flag,0.3829787234042553
+green_map_flag,0.42819148936170215
+green_resp_rate_flag,0.44680851063829785
+green_fio2_flag,0.675531914893617

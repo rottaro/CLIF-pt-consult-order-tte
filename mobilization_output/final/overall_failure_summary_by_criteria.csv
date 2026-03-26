@@ -1,0 +1,5 @@
+criteria,total_encounters,failed_encounters,failure_rate,most_problematic_component,highest_component_failure_rate,site_name
+TEAM,32117,1768,0.05504872808792851,hourly_trach,0.9213800904977375,mimic
+Patel,32117,958,0.029828439767101533,paralytics_flag,0.9279749478079332,mimic
+Yellow,32117,997,0.031042749945511722,red_hypertensive_flag,0.995987963891675,mimic
+Green,32117,2297,0.07151975589251798,hourly_trach,0.9220722681758816,mimic

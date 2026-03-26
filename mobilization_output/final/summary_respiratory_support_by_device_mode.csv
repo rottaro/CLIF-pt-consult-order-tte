@@ -1,0 +1,226 @@
+device_category,mode_category,variable,N,missing,min,q25,median,q75,mean,max
+cpap,assist control-volume control,fio2_set,2,2,0.7,0.75,0.8,0.85,0.8,0.9
+cpap,other,fio2_set,45,331,0.21,0.4,0.6,0.7,0.614,1.0
+cpap,pressure support/cpap,fio2_set,179,16,0.21,0.4,0.5,0.7,0.5779888268156425,1.0
+cpap,simv,fio2_set,1,0,0.35,0.35,0.35,0.35,0.35,0.35
+face mask,assist control-volume control,fio2_set,34,1,0.35,0.4,0.5,1.0,0.6338235294117647,1.0
+face mask,other,fio2_set,47,12,0.35,0.4,0.5,0.85,0.6127659574468085,1.0
+face mask,pressure support/cpap,fio2_set,476,26,0.3,0.4,0.475,0.5,0.46619747899159664,1.0
+face mask,pressure-regulated volume control,fio2_set,19,0,0.35,0.4,0.5,1.0,0.65,1.0
+face mask,simv,fio2_set,3,0,0.35,0.425,0.5,0.5,0.45,0.5
+face mask,volume support,fio2_set,1,0,0.4,0.4,0.4,0.4,0.4,0.4
+high flow nc,assist control-volume control,fio2_set,3,0,0.5,0.5,0.5,0.5,0.5,0.5
+high flow nc,other,fio2_set,29,1,0.3,0.5,0.6,1.0,0.7034482758620689,1.0
+high flow nc,pressure support/cpap,fio2_set,42,2,0.3,0.5,0.6,0.8,0.6428571428571429,1.0
+high flow nc,pressure-regulated volume control,fio2_set,13,0,0.5,0.9,1.0,1.0,0.8923076923076922,1.0
+imv,assist control-volume control,fio2_set,141912,1417,0.21,0.4,0.5,0.5,0.5136016686397205,1.0
+imv,other,fio2_set,23706,296,0.21,0.3,0.4,0.5,0.416387412469417,1.0
+imv,pressure control,fio2_set,9627,112,0.21,0.4,0.5,0.6,0.5130258647553755,1.0
+imv,pressure support/cpap,fio2_set,263384,3069,0.2,0.4,0.4,0.5,0.41466732983020993,1.0
+imv,pressure-regulated volume control,fio2_set,129930,1104,0.21,0.4,0.5,0.55,0.5013917494035249,1.0
+imv,simv,fio2_set,11880,163,0.21,0.4,0.4,0.5,0.43270622895622896,1.0
+imv,volume support,fio2_set,2415,18,0.21,0.35,0.4,0.4,0.4053002070393375,1.0
+nasal cannula,assist control-volume control,fio2_set,51,4,0.35,0.5,0.5,1.0,0.6813725490196079,1.0
+nasal cannula,other,fio2_set,13,121,0.28,0.35,0.4,0.5,0.44461538461538463,1.0
+nasal cannula,pressure support/cpap,fio2_set,110,74,0.28,0.4,0.4,0.5,0.4661818181818182,1.0
+nasal cannula,pressure-regulated volume control,fio2_set,24,1,0.4,0.5,0.6,1.0,0.6875,1.0
+nasal cannula,simv,fio2_set,2,2,0.3,0.475,0.65,0.825,0.65,1.0
+nippv,assist control-volume control,fio2_set,54,1,0.21,0.3,0.4,0.5,0.47444444444444445,1.0
+nippv,other,fio2_set,2593,7571,0.21,0.4,0.5,0.7,0.5544195912070959,1.0
+nippv,pressure control,fio2_set,42,1,0.25,0.35,0.35,0.5,0.4547619047619048,1.0
+nippv,pressure support/cpap,fio2_set,4420,221,0.21,0.4,0.5,0.6,0.5439886877828054,1.0
+nippv,pressure-regulated volume control,fio2_set,7,0,0.25,0.4,0.4,0.7,0.55,1.0
+nippv,simv,fio2_set,59,6,0.24,0.35,0.4,0.55,0.4593220338983051,1.0
+other,assist control-volume control,fio2_set,58,3,0.4,0.4,0.5,0.575,0.5603448275862069,1.0
+other,other,fio2_set,170,40,0.21,0.4,0.5,0.6,0.5395882352941177,1.0
+other,pressure control,fio2_set,3,0,0.5,0.5,0.5,0.65,0.6,0.8
+other,pressure support/cpap,fio2_set,763,35,0.21,0.4,0.5,0.6,0.5452817824377457,1.0
+other,pressure-regulated volume control,fio2_set,24,0,0.3,0.5,0.5,0.6,0.5583333333333333,1.0
+other,simv,fio2_set,15,0,0.28,0.3,0.4,0.5,0.43200000000000005,1.0
+trach collar,assist control-volume control,fio2_set,74,7,0.3,0.4,0.4,0.5,0.4864864864864865,1.0
+trach collar,other,fio2_set,6,6,0.4,0.4,0.4,0.4,0.4166666666666667,0.5
+trach collar,pressure control,fio2_set,2,0,0.21,0.2575,0.305,0.35250000000000004,0.305,0.4
+trach collar,pressure support/cpap,fio2_set,289,8,0.3,0.4,0.4,0.5,0.44186851211072664,1.0
+trach collar,pressure-regulated volume control,fio2_set,23,1,0.3,0.4,0.4,0.5,0.4934782608695652,1.0
+trach collar,simv,fio2_set,14,0,0.35,0.4,0.4,0.4,0.4107142857142857,0.5
+trach collar,volume support,fio2_set,5,0,0.35,0.4,0.4,0.4,0.39,0.4
+cpap,assist control-volume control,peep_set,4,0,5.0,5.0,6.5,9.0,7.5,12.0
+cpap,other,peep_set,258,118,0.0,5.0,8.5,10.0,8.937984496124031,22.0
+cpap,pressure support/cpap,peep_set,177,18,0.0,5.0,5.0,8.0,6.8559322033898304,15.0
+cpap,simv,peep_set,1,0,5.0,5.0,5.0,5.0,5.0,5.0
+face mask,assist control-volume control,peep_set,34,1,0.0,5.0,5.0,5.0,5.676470588235294,10.0
+face mask,other,peep_set,42,17,0.0,5.0,5.0,8.0,5.928571428571429,14.0
+face mask,pressure support/cpap,peep_set,411,91,0.0,5.0,5.0,5.0,4.35279805352798,12.0
+face mask,pressure-regulated volume control,peep_set,19,0,5.0,5.0,5.0,6.5,5.894736842105263,10.0
+face mask,simv,peep_set,1,2,5.0,5.0,5.0,5.0,5.0,5.0
+face mask,volume support,peep_set,1,0,0.0,0.0,0.0,0.0,0.0,0.0
+high flow nc,assist control-volume control,peep_set,3,0,5.0,5.0,5.0,5.0,5.0,5.0
+high flow nc,other,peep_set,25,5,0.0,5.0,5.0,8.0,6.64,15.0
+high flow nc,pressure support/cpap,peep_set,40,4,0.0,5.0,5.0,7.0,5.575,10.0
+high flow nc,pressure-regulated volume control,peep_set,13,0,5.0,5.0,10.0,10.0,9.538461538461538,15.0
+imv,assist control-volume control,peep_set,141872,1457,0.0,5.0,5.0,10.0,7.588256498815833,85.0
+imv,other,peep_set,22872,1130,0.0,5.0,5.0,8.0,6.696720881427072,58.0
+imv,pressure control,peep_set,9650,89,0.0,5.0,9.0,12.0,9.0700207253886,147.0
+imv,pressure support/cpap,peep_set,264145,2308,0.0,5.0,5.0,8.0,19.802617501750934,3666670.0
+imv,pressure-regulated volume control,peep_set,129959,1075,0.0,5.0,8.0,10.0,8.196637862710547,31.0
+imv,simv,peep_set,11900,143,0.0,5.0,5.0,5.0,5.992983193277311,21.0
+imv,volume support,peep_set,2418,15,0.0,5.0,5.0,8.0,6.446236559139785,16.0
+nasal cannula,assist control-volume control,peep_set,52,3,5.0,5.0,5.0,5.0,5.576923076923077,12.0
+nasal cannula,other,peep_set,90,44,0.0,5.0,5.0,8.0,6.188888888888889,13.0
+nasal cannula,pressure support/cpap,peep_set,147,37,0.0,5.0,5.0,5.0,4.469387755102041,10.0
+nasal cannula,pressure-regulated volume control,peep_set,25,0,5.0,5.0,5.0,5.0,5.76,13.0
+nasal cannula,simv,peep_set,3,1,5.0,5.0,5.0,5.0,5.0,5.0
+nippv,assist control-volume control,peep_set,52,3,5.0,5.0,5.0,5.0,5.6923076923076925,10.0
+nippv,other,peep_set,9763,401,0.0,5.0,6.0,8.0,7.51757656458056,814.0
+nippv,pressure control,peep_set,42,1,0.0,5.0,5.0,8.0,6.0,15.0
+nippv,pressure support/cpap,peep_set,4452,189,0.0,5.0,5.0,8.0,6.197888589398024,25.0
+nippv,pressure-regulated volume control,peep_set,7,0,5.0,5.0,5.0,7.5,7.0,14.0
+nippv,simv,peep_set,62,3,0.0,5.0,5.0,6.75,5.854838709677419,10.0
+other,assist control-volume control,peep_set,59,2,3.0,5.0,5.0,10.0,6.9491525423728815,15.0
+other,other,peep_set,202,8,3.0,5.0,5.5,8.0,6.900990099009901,12.0
+other,pressure control,peep_set,3,0,10.0,10.0,10.0,10.0,10.0,10.0
+other,pressure support/cpap,peep_set,771,27,0.0,5.0,5.0,8.0,6.22568093385214,12.0
+other,pressure-regulated volume control,peep_set,24,0,5.0,5.0,5.0,5.75,6.0,10.0
+other,simv,peep_set,15,0,5.0,5.0,5.0,6.5,5.933333333333334,10.0
+trach collar,assist control-volume control,peep_set,77,4,5.0,5.0,5.0,8.0,7.012987012987013,24.0
+trach collar,other,peep_set,11,1,5.0,5.0,5.0,8.0,6.363636363636363,8.0
+trach collar,pressure control,peep_set,2,0,7.0,7.0,7.0,7.0,7.0,7.0
+trach collar,pressure support/cpap,peep_set,273,24,0.0,5.0,5.0,5.0,5.8388278388278385,12.0
+trach collar,pressure-regulated volume control,peep_set,24,0,0.0,5.0,5.0,5.0,6.541666666666667,16.0
+trach collar,simv,peep_set,14,0,5.0,5.0,5.0,5.0,5.571428571428571,10.0
+trach collar,volume support,peep_set,5,0,5.0,5.0,5.0,5.0,5.6,8.0
+cpap,assist control-volume control,lpm_set,0,4,,,,,,
+cpap,other,lpm_set,204,172,0.0,3.0,5.0,8.0,6.174019607843137,30.0
+cpap,pressure support/cpap,lpm_set,10,185,0.0,4.0,7.0,9.5,6.7,15.0
+cpap,simv,lpm_set,0,1,,,,,,
+face mask,assist control-volume control,lpm_set,7,28,3.0,6.0,10.0,12.5,9.285714285714286,15.0
+face mask,other,lpm_set,42,17,4.0,10.0,10.0,12.0,10.69047619047619,15.0
+face mask,pressure support/cpap,lpm_set,275,227,2.0,10.0,10.0,10.0,11.127272727272727,75.0
+face mask,pressure-regulated volume control,lpm_set,3,16,10.0,10.0,10.0,12.5,11.666666666666666,15.0
+face mask,simv,lpm_set,1,2,12.0,12.0,12.0,12.0,12.0,12.0
+face mask,volume support,lpm_set,1,0,10.0,10.0,10.0,10.0,10.0,10.0
+high flow nc,assist control-volume control,lpm_set,0,3,,,,,,
+high flow nc,other,lpm_set,26,4,15.0,16.25,37.5,40.0,33.84615384615385,70.0
+high flow nc,pressure support/cpap,lpm_set,25,19,10.0,15.0,15.0,40.0,27.68,60.0
+high flow nc,pressure-regulated volume control,lpm_set,0,13,,,,,,
+imv,assist control-volume control,lpm_set,233,143096,0.0,4.0,5.0,10.0,14.165236051502147,100.0
+imv,other,lpm_set,25,23977,2.0,3.0,4.0,10.0,7.44,40.0
+imv,pressure control,lpm_set,2,9737,3.0,12.25,21.5,30.75,21.5,40.0
+imv,pressure support/cpap,lpm_set,263,266190,0.0,9.0,10.0,12.0,12.546007604562737,60.0
+imv,pressure-regulated volume control,lpm_set,65,130969,0.0,4.0,5.0,12.0,14.584615384615384,100.0
+imv,simv,lpm_set,17,12026,0.5,1.0,4.0,5.0,8.823529411764707,50.0
+imv,volume support,lpm_set,2,2431,10.0,10.0,10.0,10.0,10.0,10.0
+nasal cannula,assist control-volume control,lpm_set,10,45,2.0,2.25,3.0,4.0,3.1,4.0
+nasal cannula,other,lpm_set,122,12,1.0,2.0,3.0,4.0,3.3237704918032787,10.0
+nasal cannula,pressure support/cpap,lpm_set,122,62,0.0,3.0,4.0,4.0,3.5204918032786887,6.0
+nasal cannula,pressure-regulated volume control,lpm_set,3,22,2.0,3.0,4.0,5.0,4.0,6.0
+nasal cannula,simv,lpm_set,3,1,3.0,3.0,3.0,3.5,3.3333333333333335,4.0
+nippv,assist control-volume control,lpm_set,1,54,3.0,3.0,3.0,3.0,3.0,3.0
+nippv,other,lpm_set,5724,4440,0.0,4.0,6.0,10.0,7.131114605171209,65.0
+nippv,pressure control,lpm_set,0,43,,,,,,
+nippv,pressure support/cpap,lpm_set,113,4528,0.0,4.0,6.0,12.0,11.451327433628318,100.0
+nippv,pressure-regulated volume control,lpm_set,0,7,,,,,,
+nippv,simv,lpm_set,0,65,,,,,,
+other,assist control-volume control,lpm_set,0,61,,,,,,
+other,other,lpm_set,26,184,2.0,4.0,8.0,11.5,8.153846153846153,15.0
+other,pressure control,lpm_set,0,3,,,,,,
+other,pressure support/cpap,lpm_set,30,768,3.0,10.0,10.0,10.0,9.966666666666667,15.0
+other,pressure-regulated volume control,lpm_set,0,24,,,,,,
+other,simv,lpm_set,0,15,,,,,,
+trach collar,assist control-volume control,lpm_set,5,76,5.0,5.0,5.0,5.0,12.0,40.0
+trach collar,other,lpm_set,4,8,10.0,10.0,10.0,10.0,10.0,10.0
+trach collar,pressure control,lpm_set,0,2,,,,,,
+trach collar,pressure support/cpap,lpm_set,37,260,10.0,10.0,10.0,12.0,10.675675675675675,15.0
+trach collar,pressure-regulated volume control,lpm_set,3,21,8.0,9.0,10.0,10.0,9.333333333333334,10.0
+trach collar,simv,lpm_set,1,13,10.0,10.0,10.0,10.0,10.0,10.0
+trach collar,volume support,lpm_set,0,5,,,,,,
+cpap,assist control-volume control,resp_rate_set,3,1,14.0,18.0,22.0,22.0,19.333333333333332,22.0
+cpap,other,resp_rate_set,12,364,5.0,8.0,12.0,16.25,12.416666666666666,24.0
+cpap,pressure support/cpap,resp_rate_set,1,194,22.0,22.0,22.0,22.0,22.0,22.0
+cpap,simv,resp_rate_set,1,0,12.0,12.0,12.0,12.0,12.0,12.0
+face mask,assist control-volume control,resp_rate_set,34,1,0.0,13.25,14.5,18.0,15.352941176470589,28.0
+face mask,other,resp_rate_set,1,58,16.0,16.0,16.0,16.0,16.0,16.0
+face mask,pressure support/cpap,resp_rate_set,7,495,0.0,0.0,0.0,15.5,7.571428571428571,22.0
+face mask,pressure-regulated volume control,resp_rate_set,19,0,12.0,16.0,16.0,18.0,17.210526315789473,22.0
+face mask,simv,resp_rate_set,2,1,7.0,7.25,7.5,7.75,7.5,8.0
+face mask,volume support,resp_rate_set,0,1,,,,,,
+high flow nc,assist control-volume control,resp_rate_set,3,0,16.0,16.0,16.0,16.0,16.0,16.0
+high flow nc,other,resp_rate_set,5,25,1.0,8.0,10.0,18.0,11.8,22.0
+high flow nc,pressure support/cpap,resp_rate_set,1,43,0.0,0.0,0.0,0.0,0.0,0.0
+high flow nc,pressure-regulated volume control,resp_rate_set,13,0,12.0,18.0,18.0,20.0,19.53846153846154,28.0
+imv,assist control-volume control,resp_rate_set,141058,2271,0.0,15.0,18.0,22.0,18.748362375760326,1618.0
+imv,other,resp_rate_set,880,23122,0.0,14.0,16.0,22.0,19.050568181818182,774.0
+imv,pressure control,resp_rate_set,9572,167,0.0,15.0,20.0,28.0,21.23506059339741,549.0
+imv,pressure support/cpap,resp_rate_set,6616,259837,0.0,0.0,15.0,18.0,17.380592503022974,879.0
+imv,pressure-regulated volume control,resp_rate_set,129510,1524,0.0,16.0,20.0,25.0,21.122785885259827,580.0
+imv,simv,resp_rate_set,11460,583,0.0,10.0,12.0,14.0,12.480802792321118,35.0
+imv,volume support,resp_rate_set,40,2393,0.0,15.0,16.0,18.0,16.45,36.0
+nasal cannula,assist control-volume control,resp_rate_set,51,4,12.0,13.0,14.0,16.0,15.27450980392157,32.0
+nasal cannula,other,resp_rate_set,6,128,0.0,10.0,12.0,15.5,11.0,16.0
+nasal cannula,pressure support/cpap,resp_rate_set,3,181,0.0,7.0,14.0,16.0,10.666666666666666,18.0
+nasal cannula,pressure-regulated volume control,resp_rate_set,25,0,12.0,16.0,16.0,20.0,18.28,34.0
+nasal cannula,simv,resp_rate_set,2,2,8.0,10.0,12.0,14.0,12.0,16.0
+nippv,assist control-volume control,resp_rate_set,51,4,10.0,14.0,16.0,20.0,16.862745098039216,24.0
+nippv,other,resp_rate_set,1801,8363,0.0,10.0,12.0,14.0,12.03553581343698,80.0
+nippv,pressure control,resp_rate_set,40,3,10.0,14.0,16.0,20.0,17.4,30.0
+nippv,pressure support/cpap,resp_rate_set,221,4420,0.0,10.0,12.0,16.0,17.443438914027148,560.0
+nippv,pressure-regulated volume control,resp_rate_set,7,0,14.0,14.0,18.0,21.0,18.857142857142858,30.0
+nippv,simv,resp_rate_set,53,12,8.0,10.0,12.0,14.0,12.150943396226415,30.0
+other,assist control-volume control,resp_rate_set,58,3,8.0,14.0,18.0,26.0,19.17241379310345,30.0
+other,other,resp_rate_set,19,191,0.0,10.0,10.0,15.0,12.421052631578947,22.0
+other,pressure control,resp_rate_set,3,0,14.0,14.0,14.0,22.0,19.333333333333332,30.0
+other,pressure support/cpap,resp_rate_set,11,787,0.0,6.0,14.0,16.0,73.0,688.0
+other,pressure-regulated volume control,resp_rate_set,24,0,12.0,16.0,16.0,18.5,17.333333333333332,25.0
+other,simv,resp_rate_set,12,3,5.0,8.0,10.0,16.0,11.833333333333334,24.0
+trach collar,assist control-volume control,resp_rate_set,79,2,10.0,14.0,16.0,19.0,17.063291139240505,30.0
+trach collar,other,resp_rate_set,4,8,18.0,18.0,18.0,18.0,18.0,18.0
+trach collar,pressure control,resp_rate_set,2,0,10.0,11.25,12.5,13.75,12.5,15.0
+trach collar,pressure support/cpap,resp_rate_set,3,294,10.0,13.5,17.0,20.5,17.0,24.0
+trach collar,pressure-regulated volume control,resp_rate_set,24,0,10.0,16.0,18.0,20.5,18.958333333333332,28.0
+trach collar,simv,resp_rate_set,14,0,7.0,10.0,12.0,12.0,11.642857142857142,16.0
+trach collar,volume support,resp_rate_set,0,5,,,,,,
+cpap,assist control-volume control,resp_rate_obs,2,2,22.0,22.0,22.0,22.0,22.0,22.0
+cpap,other,resp_rate_obs,23,353,11.0,19.0,23.0,26.5,24.0,49.0
+cpap,pressure support/cpap,resp_rate_obs,110,85,0.0,19.0,24.0,29.0,24.454545454545453,40.0
+cpap,simv,resp_rate_obs,0,1,,,,,,
+face mask,assist control-volume control,resp_rate_obs,27,8,12.0,16.0,18.0,21.0,18.77777777777778,32.0
+face mask,other,resp_rate_obs,14,45,14.0,16.5,21.5,24.0,21.285714285714285,32.0
+face mask,pressure support/cpap,resp_rate_obs,298,204,0.0,14.25,20.0,24.75,19.963087248322147,57.0
+face mask,pressure-regulated volume control,resp_rate_obs,19,0,13.0,18.0,18.0,22.0,20.57894736842105,38.0
+face mask,simv,resp_rate_obs,2,1,12.0,14.5,17.0,19.5,17.0,22.0
+face mask,volume support,resp_rate_obs,1,0,35.0,35.0,35.0,35.0,35.0,35.0
+high flow nc,assist control-volume control,resp_rate_obs,3,0,25.0,25.5,26.0,27.0,26.333333333333332,28.0
+high flow nc,other,resp_rate_obs,6,24,11.0,18.25,26.0,28.5,23.5,33.0
+high flow nc,pressure support/cpap,resp_rate_obs,24,20,8.0,20.0,25.0,28.25,24.666666666666668,42.0
+high flow nc,pressure-regulated volume control,resp_rate_obs,12,1,12.0,18.0,24.0,29.25,24.416666666666668,41.0
+imv,assist control-volume control,resp_rate_obs,137123,6206,-1.0,16.0,20.0,25.0,21.068370732845693,2016.0
+imv,other,resp_rate_obs,21836,2166,0.0,15.0,18.0,23.0,19.2933687488551,146.0
+imv,pressure control,resp_rate_obs,8962,777,0.0,18.0,24.0,30.0,23.99207766123633,185.0
+imv,pressure support/cpap,resp_rate_obs,222652,43801,-1.0,16.0,21.0,25.0,21.099416623250633,3537.0
+imv,pressure-regulated volume control,resp_rate_obs,124992,6042,0.0,18.0,22.0,27.0,22.494063620071685,363.0
+imv,simv,resp_rate_obs,10551,1492,0.0,13.0,16.0,21.0,17.78475973841342,68.0
+imv,volume support,resp_rate_obs,2371,62,3.0,18.0,22.0,28.0,23.38591311682834,62.0
+nasal cannula,assist control-volume control,resp_rate_obs,44,11,12.0,14.0,16.0,20.25,18.0,35.0
+nasal cannula,other,resp_rate_obs,10,124,12.0,14.0,20.0,28.75,23.3,51.0
+nasal cannula,pressure support/cpap,resp_rate_obs,101,83,7.0,13.0,18.0,22.0,18.376237623762375,40.0
+nasal cannula,pressure-regulated volume control,resp_rate_obs,23,2,12.0,16.0,20.0,24.0,20.434782608695652,34.0
+nasal cannula,simv,resp_rate_obs,2,2,12.0,14.0,16.0,18.0,16.0,20.0
+nippv,assist control-volume control,resp_rate_obs,47,8,14.0,19.0,26.0,29.0,24.80851063829787,37.0
+nippv,other,resp_rate_obs,1501,8663,0.0,18.0,23.0,28.0,23.699533644237174,91.0
+nippv,pressure control,resp_rate_obs,35,8,15.0,20.5,25.0,28.0,24.857142857142858,38.0
+nippv,pressure support/cpap,resp_rate_obs,2919,1722,0.0,21.0,25.0,30.0,26.11613566289825,660.0
+nippv,pressure-regulated volume control,resp_rate_obs,7,0,14.0,14.5,18.0,21.5,19.142857142857142,30.0
+nippv,simv,resp_rate_obs,45,20,9.0,16.0,22.0,30.0,23.644444444444446,44.0
+other,assist control-volume control,resp_rate_obs,59,2,14.0,18.0,21.0,27.5,22.559322033898304,34.0
+other,other,resp_rate_obs,171,39,7.0,17.0,22.0,29.0,23.608187134502923,122.0
+other,pressure control,resp_rate_obs,3,0,21.0,21.5,22.0,26.0,24.333333333333332,30.0
+other,pressure support/cpap,resp_rate_obs,559,239,0.0,20.0,26.0,30.0,25.62432915921288,61.0
+other,pressure-regulated volume control,resp_rate_obs,24,0,12.0,16.0,17.5,20.0,18.0,25.0
+other,simv,resp_rate_obs,7,8,15.0,18.0,23.0,23.5,20.857142857142858,25.0
+trach collar,assist control-volume control,resp_rate_obs,76,5,10.0,16.0,20.0,26.0,21.81578947368421,39.0
+trach collar,other,resp_rate_obs,6,6,20.0,21.75,24.5,25.0,24.833333333333332,34.0
+trach collar,pressure control,resp_rate_obs,2,0,15.0,16.5,18.0,19.5,18.0,21.0
+trach collar,pressure support/cpap,resp_rate_obs,210,87,0.0,19.0,23.0,29.0,24.033333333333335,60.0
+trach collar,pressure-regulated volume control,resp_rate_obs,24,0,14.0,18.0,19.0,23.25,20.833333333333332,31.0
+trach collar,simv,resp_rate_obs,12,2,12.0,16.25,19.0,28.0,20.916666666666668,32.0
+trach collar,volume support,resp_rate_obs,5,0,17.0,21.0,27.0,31.0,26.4,36.0

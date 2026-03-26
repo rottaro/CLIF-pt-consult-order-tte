@@ -1,0 +1,14 @@
+2026-02-27 16:23:41,364 - clifpy.tables.patient_procedures - INFO - Initialized patient_procedures table
+2026-02-27 16:23:41,365 - clifpy.tables.patient_procedures - INFO - Data directory: /nfs/roberts/project/pi_sj692/shared/mimicclif
+2026-02-27 16:23:41,365 - clifpy.tables.patient_procedures - INFO - File type: parquet
+2026-02-27 16:23:41,366 - clifpy.tables.patient_procedures - INFO - Timezone: America/New_York
+2026-02-27 16:23:41,367 - clifpy.tables.patient_procedures - INFO - Output directory: /nfs/roberts/project/pi_sj692/shared/PT_consults/output
+2026-02-27 16:23:41,371 - clifpy.tables.patient_procedures - INFO - Loaded schema from /nfs/roberts/project/pi_sj692/gcr22/clifenv/lib/python3.12/site-packages/clifpy/schemas/patient_procedures_schema.yaml
+2026-02-27 16:23:41,399 - clifpy.tables.patient_procedures - INFO - Loaded outlier configuration
+2026-02-27 16:23:42,150 - clifpy.tables.patient_procedures - INFO - Initialized patient_procedures table
+2026-02-27 16:23:42,151 - clifpy.tables.patient_procedures - INFO - Data directory: /nfs/roberts/project/pi_sj692/shared/mimicclif
+2026-02-27 16:23:42,152 - clifpy.tables.patient_procedures - INFO - File type: parquet
+2026-02-27 16:23:42,152 - clifpy.tables.patient_procedures - INFO - Timezone: America/New_York
+2026-02-27 16:23:42,153 - clifpy.tables.patient_procedures - INFO - Output directory: /nfs/roberts/project/pi_sj692/shared/PT_consults/output
+2026-02-27 16:23:42,155 - clifpy.tables.patient_procedures - INFO - Loaded schema from /nfs/roberts/project/pi_sj692/gcr22/clifenv/lib/python3.12/site-packages/clifpy/schemas/patient_procedures_schema.yaml
+2026-02-27 16:23:42,181 - clifpy.tables.patient_procedures - INFO - Loaded outlier configuration
