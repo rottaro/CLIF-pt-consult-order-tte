@@ -1,2 +1,0 @@
-criteria_name,site_name,total_failed_encounters,unique_combinations,most_common_combination,most_common_count,combinations_affecting_50pct
-TEAM,mimic,1768,40,team_pulse_flag:0|team_lactate_flag:1|team_ne_flag:1|team_fio2_flag:1|team_peep_flag:0|team_resp_rate_flag:0|hourly_trach:1|paralytics_flag:1,597,3

@@ -1,4 +1,0 @@
-data_directory: /nfs/roberts/project/pi_sj692/shared/mimicclif
-filetype: parquet
-timezone: US/Eastern
-output_directory: /nfs/roberts/project/pi_sj692/shared/PT_consults/output
