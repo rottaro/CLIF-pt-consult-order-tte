@@ -26,6 +26,8 @@ output_old/
 mobilization_output/
 clif_key_icu_orders.parquet
 code/output/
+code/log
+code/logs
 *.log
 
 # Distribution / packaging

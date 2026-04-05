@@ -1,7 +1,8 @@
 # PT Consult Order Target Trial Emulation
 - Using [MIMIC IV Database](https://physionet.org/content/mimiciv/3.1/)
 - Converted to [CLIF Format](https://github.com/Common-Longitudinal-ICU-data-Format/CLIF-MIMIC)
-- Witth early mobilization critaria algorithm taken from [Eligibility for Mobilization Algorithm](https://github.com/Common-Longitudinal-ICU-data-Format/CLIF-eligibility-for-mobilization/tree/main)
+- With early mobilization critaria algorithm taken from [Eligibility for Mobilization Algorithm](https://github.com/Common-Longitudinal-ICU-data-Format/CLIF-eligibility-for-mobilization/tree/main)
+- Should work with generalized CLIF data with the tables required below.
 
 ## Required CLIF Tables
 
@@ -23,7 +24,11 @@
 
 1. **Download This Repository**
 
-2. **Update Config**: Open config/config.json. Fill out the site_name, clif_folder path and time_zone. A MIMIC folder path will only be used if the site name string contains mimic (ie. MIMIC-CLIF) time_bin_size and time_end should be 4 or 48 but they are here to be customized if needed.
+2. **Update Config**:
+
+- Open `config/config.json`
+- Fill out the site_name, clif_folder path and time_zone. A MIMIC folder path will only be used if the site name string contains mimic (ie. MIMIC-CLIF)
+- `time_bin_size` and `time_end` should be 4 and 48 respectively but they are the configuration to be customized if needed.
 
 4. **Run Script**: Run the entire pipeline using the commands.
 ```
@@ -38,6 +43,9 @@ We want the output saved to `output/final` and `output/logs`.
 ## Authors
 
 *Snigdha Jain*
+
 *Jinping Liang*
+
 *Giulio C. Rottaro Castejon*
-Yale School of Medicine and Yale School of Public Health
+
+Yale University
