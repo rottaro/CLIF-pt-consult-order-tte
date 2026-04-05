@@ -1,11 +1,11 @@
 {
-    "clif":"/nfs/roberts/project/pi_sj692/shared/mimicclif",
+    "site_name":"MIMIC-CLIF",
+    "clif_folder":"/nfs/roberts/project/pi_sj692/shared/mimicclif",
     "mimic":"/nfs/roberts/project/pi_sj692/shared/mimiciv",
-    "mob":"/nfs/roberts/project/pi_sj692/shared/PT_consults/mobilization_output",
-    "output":"/nfs/roberts/project/pi_sj692/shared/PT_consults/output",
     "time_zone":"America/New_York",
-    "use_mimic":1,
+    "file_type":"parquet",
     "time_bin_size":4,
-    "time_end":48
+    "time_end":48,
+    "comment":"Fill out the site_name, clif_folder path and time_zone. A MIMIC folder path will only be used if the site name string contains mimic (ie. MIMIC-CLIF) time_bin_size and time_end should be 4 or 48 but they  are here to be customized if needed."
 }
     

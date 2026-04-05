@@ -8,6 +8,9 @@ code/__pycache__/
 # C extensions
 *.so
 
+#Environment
+cpttenv/
+
 # Jupyter checkpoint
 .ipynb_checkpoints
 code/.ipynb_checkpoints
@@ -19,7 +22,11 @@ _Side Projects/
 
 # Output of code
 output/
+output_old/
 mobilization_output/
+clif_key_icu_orders.parquet
+code/output/
+*.log
 
 # Distribution / packaging
 .Python

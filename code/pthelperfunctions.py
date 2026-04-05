@@ -7,14 +7,14 @@ import json
 import clifpy
 import numpy as np
 
-with open('../config/config.json', 'r') as file:
-    config = json.load(file)
-
-#To use MIMIC which we should not need once all data is in CLIF format
-use_mimic = config["use_mimic"]
-
 #file paths
-path_out = config['output']
+work_dir = os.path.abspath('..')
+output_folder = os.path.join(work_dir,'output')
+
+#Config
+with open(os.path.join(work_dir,'config','config.json'), 'r') as file:
+    config = json.load(file)
+config['output_folder'] = output_folder
 
 #My time_zone
 my_tz = config['time_zone']
@@ -42,58 +42,107 @@ def convert_datetime_columns(df: pd.DataFrame) -> pd.DataFrame:
         
     return df
 
-#Load ClifOrchestrator
-co = clifpy.ClifOrchestrator(
-    data_directory=config['clif'],
-    filetype='parquet',
-    timezone=my_tz,
-    output_directory=config['output']
-)
-def load_clif_table(table_name:str, hosp_list:list = []) -> pd.DataFrame:
-    '''
-    hosp_list is a list of hospitalization_ids to filter by.
-    '''
-    if hosp_list:
-        co.initialize(tables = [table_name],
-                      filters={'hospitalization_id':hosp_list} )
-    else:
-        co.initialize(tables = [table_name])
-    table = co.load_table(table_name)
-    clifpy.utils.apply_outlier_handling(table) #Remove outliers per CLIF standards
-    return table.df
-
-def load_data(data_set:str, name:str, folder:str = '', type:str = 'parquet') -> pd.DataFrame:
-    """Loads a table from the MIMIC/mobilization/output data sets. Input: string with table name. Output: DataFrame. Automatically converts to my_tz."""
-    if folder:
-        path = os.path.join(config[data_set], folder, f"{name}.{type}")
-    else:
-        path = os.path.join(config[data_set], f"{name}.{type}")
+def load_data(data_set: str, name: str, folder: str = '', type: str = None) -> pd.DataFrame:
+    """Loads a table from the CLIF/MIMIC/mobilization/output data sets. Input: string with table name. Output: DataFrame. Automatically converts to my_tz."""
     
-    if type == 'parquet':
-        df = pd.read_parquet(path)
-    elif type == 'csv' or type == 'csv.gz':
-        df = pd.read_csv(path)
+    def _load_path(path: str, file_type: str) -> pd.DataFrame:
+        if file_type == 'parquet':
+            return pd.read_parquet(path)
+        elif file_type in ('csv', 'csv.gz'):
+            return pd.read_csv(path)
+        else:
+            raise ValueError('File type needs to be parquet, csv or csv.gz.')
+
+    def _build_path(file_type: str) -> str:
+        if folder:
+            return os.path.join(config[data_set], folder, f"{name}.{file_type}")
+        return os.path.join(config[data_set], f"{name}.{file_type}")
+
+    if type is not None:
+        path = _build_path(type)
+        df = _load_path(path, type)
     else:
-        raise ValueError('File type needs to be Parquet, csv or cvs.gz.')
+        for candidate in ('parquet', 'csv', 'csv.gz'):
+            path = _build_path(candidate)
+            if os.path.exists(path):
+                df = _load_path(path, candidate)
+                break
+        else:
+            raise FileNotFoundError(
+                f"No file found for '{name}' in '{data_set}' "
+                f"(tried parquet, csv, csv.gz)."
+            )
+
     df = convert_datetime_columns(df)
     return df
 
+def missing_summary(in_df:pd.DataFrame,f_name:str=None) -> pd.DataFrame:
+    def missing(x): return round(np.mean(x.isna())*100,2)
+    miss_df = in_df.agg(missing).reset_index()
+    miss_df.columns = ['column_name','missing']
+    miss_df.iloc[0] = {'column_name':'size', 'missing':in_df.shape[0]}
+    if f_name:
+        path = os.path.join(output_folder,'final',f'{f_name}_missing.csv')
+        miss_df.to_csv(path)
+        return path
+    else:
+        return miss_df
+
+def table_summary(in_df:pd.DataFrame) -> pd.DataFrame:
+    def missing(x): return round(np.mean(x.isna())*100,2)
+    def Q1(x): return x.quantile(0.25)
+    def Q3(x): return x.quantile(0.25)
+    numeric_df = in_df.select_dtypes(include=['number','bool'])
+    for col in numeric_df.columns:
+        if pd.api.types.is_bool_dtype(numeric_df[col]):
+            numeric_df[col] = numeric_df[col].astype(int)
+    sum_df = numeric_df.agg(['min',Q1,'median','mean',Q3,'max', missing]).reset_index().T
+    cols = sum_df.iloc[0]
+    sum_df = sum_df.iloc[1:]
+    sum_df.columns = cols
+    sum_df['mean'] = sum_df['mean'].astype(float).round(3)
+    return sum_df
+
 #time_bins object
 class time_bins:
-    
-    def __init__(self, eb:pd.DataFrame):
+
+    def __init__(self, in_name:str=None, in_df:pd.DataFrame=None, in_eb:pd.DataFrame=None, resort:bool=True):
         '''
-        INPUT
-        DataFrame with UNIQUE encounter_blocks per row, you can also have other additional columns in there without issue.
+        INIT
+        inputs:
+        in_name: name of the file where the data frame is initially stored. It will look for it in "output/intermediate", assumes parquet file.
+        in_df: a DataFrame with time_bins already built in.
+        in_eb: a DataFrame of encounter blocks to build the time_bins.
+        NOTES: If given a DF rather than building it, it must macth expected structure.
         '''
-        self.bin_array = np.arange(-1*config['time_bin_size'], config['time_end'] + config['time_bin_size'], config['time_bin_size'])
+        self.bin_array = np.arange(0, config['time_end'] + config['time_bin_size'], config['time_bin_size'])
         self.bins_df = pd.DataFrame({
             'bin_start': self.bin_array[:-1],
             'bin_end': self.bin_array[1:]
         })
         self.bins_df['time_bin'] = self.bins_df['bin_start'].astype(str)
-        self.df = pd.merge(eb, self.bins_df, how='cross').reset_index()
-        self.df = self.df.sort_values(by=['encounter_block','bin_start'])
+        
+        if in_name:
+            self.df = load_data('output_folder',in_name, folder='intermediate')
+            extra_bins = sum(~self.df['time_bin'].isin(self.bins_df['time_bin'])) > 0
+        elif in_df is not None:
+            self.df = in_df.copy()
+            extra_bins = sum(~self.df['time_bin'].isin(self.bins_df['time_bin'])) > 0
+        elif in_eb is not None:
+            self.df = pd.merge(in_eb, self.bins_df, how='cross').reset_index()
+            extra_bins = False
+        else:
+            raise ValueError("Input to initialize hourly_blocks must include in_path=file name or in_df=DataFrame.")
+
+        self.required_cols =  ['encounter_block','bin_start','bin_end','time_bin']
+        missing = [col for col in self.required_cols if col not in self.df.columns]
+        if missing:
+            raise ValueError(f"Missing columns: {missing}")
+
+        if resort:
+            self.df = self.df.sort_values(by=['encounter_block','bin_start'])
+        if extra_bins:
+            print("WARNING: There are time_bin values in the provided DataFrame which are unexpected.")
     
     def classify_time_bin(self, t_diff:pd.Series) -> pd.Series:
         '''
@@ -224,19 +273,16 @@ class time_bins:
         print(f"Removed {start_N - end_N} out of {start_N} from time_bin.df based on censor {censor_col} with keep_first = {keep_first}")
     
     def table_summary(self) -> pd.DataFrame:
-        def missing(x): return round(np.mean(x.isna())*100,2)
-        numeric_df = self.df.select_dtypes(include=['number','bool'])
-        numeric_df['time_bin'] = self.df['time_bin']
-        return  numeric_df.groupby('time_bin').agg(['min','mean','max', missing]).reset_index()
+        return table_summary(self.df)
+        
+    def save(self, suffix:str=''):
+        path = os.path.join(output_folder,'intermediate',f'time_bin{suffix}.parquet')
+        self.df.to_parquet(path)
+        path = os.path.join(output_folder, 'final',f'time_bin{suffix}_summary.csv')
+        _summary = self.table_summary()
+        _summary.to_csv(path)
 
-    def save(self):
-        path = os.path.join(path_out, "time_bins.csv")
-        self.df.to_csv(path)
-        path = os.path.join(path_out, "time_bins_summary.csv")
-        self.table_summary().to_csv(path)
-        del path
-
-#Older aggregation by time function replaced by time bins above
+#Older aggregation by time function for a single time period
 def aggregate_by_time(in_df:pd.DataFrame, val_col:str, min_time:int = 0, max_time:int = 24, agg_func:str = 'mean'):
     '''
     INPUTS:
@@ -271,7 +317,7 @@ def aggregate_by_time(in_df:pd.DataFrame, val_col:str, min_time:int = 0, max_tim
         df[val_col] = df[val_col].astype(bool)
     and_flag = agg_func == 'all'
     if and_flag:
-        agg_func = 'mean'
+        agg_func = 'min'
         df[val_col] = df[val_col].astype(bool)
 
     print(f'Aggregation step for {new_name}')
@@ -282,4 +328,140 @@ def aggregate_by_time(in_df:pd.DataFrame, val_col:str, min_time:int = 0, max_tim
     if or_flag or and_flag: agg_df[new_name] = agg_df[new_name] == 1
     
     return agg_df
+
+class hourly_blocks:
+
+    def __init__(self, in_name:str=None, in_df:pd.DataFrame=None):
+        '''
+        INIT
+        This class does not built the hourly data frame but just holds it and adds to it.
+        inputs:
+        in_name: name of the file where the data frame is initially stored. It will look for it in "output/intermediate", assumes parquet file.
+        in_df: a DataFrame with hour blocks already built in.
+        NOTES: The data frame must have columns 'encounter_block':int and 'time_from_vent':int.
+        '''
+        if in_name:
+            self.df = load_data('output_folder',in_name, folder='intermediate')
+        elif in_df is not None:
+            self.df = in_df.copy()
+        else:
+            raise ValueError("Input to initialize hourly_blocks must include in_path=file name or in_df=DataFrame.")
+
+        self.required_cols = ['encounter_block', 'time_from_vent']
+        missing = [col for col in self.required_cols if col not in self.df.columns]
+        if missing:
+            raise ValueError(f"Missing columns: {missing}")
+
+        self.df['encounter_block'] = self.df['encounter_block'].astype(int)
+        self.df['time_from_vent'] = self.df['time_from_vent'].astype(int)
+
+        self.df = self.df.sort_values(by=self.required_cols)
+
+    def calc_time_from_vent(self, t_diff:pd.Series) -> pd.Series:
+        '''
+        INPUT
+        t_diff = Pandas DataSeries with a time_delta time element or a numerical element assumed to be hours
+        OUTPUT
+        DataSeries with integers rounded down as the value.
+        '''
+        #If time_delta format convert to hours.
+        if pd.api.types.is_timedelta64_dtype(t_diff):
+            t_diff = t_diff.dt.total_seconds()/3600
+
+        _res = np.floor(t_diff)
+        return _res.astype(int)
+
+    def hourly_fill(self,
+                      val_col:str,
+                      fill_with):
+        '''
+        Sorts time_from_vent and fill them in with specified request.
+        INPUT
+        val_col = val_col string name in the self.df.
+        fill_with = either forward fill or back and forward fill or a value.
+        NOTE: Assumes data frame remains sorted.
+        '''
+        
+        if fill_with == 'ffill':
+            self.df[val_col] = self.df.groupby('encounter_block')[val_col].ffill()
+        elif fill_with == 'bffill':
+            #Forward fill first then back fill
+            self.df[val_col] = self.df.groupby('encounter_block')[val_col].ffill()
+            self.df[val_col] = self.df.groupby('encounter_block')[val_col].bfill()
+        else:
+            self.df[val_col].fillna(fill_with, inplace=True)
     
+    def addto_blocks(self,
+                     input_df:pd.DataFrame,
+                     val_col:str,
+                     agg_func:str = 'mean',
+                     fill_with = np.nan,
+                     new_name:str = None,
+                     reorder:bool = False):
+        '''
+        INPUTS:
+        df = DataFrame required to have:
+            Either a column called 'time_diff' which is a date time difference value or any number (assumed hours) or 'time_from_vent'.
+            val_col, the data itself to be aggregated.
+            encounter_block
+            'time_from_vent' or 'time_diff' = unique time string can be created with function above.
+        agg = aggregation function to aggregate
+        new_name = for the column in hourly_blocks
+        '''
+        #Time bins
+        if 'time_from_vent' not in input_df.columns:
+            input_df['time_from_vent'] = self.calc_time_from_vent(input_df['time_diff'])
+    
+        #Copy data frame
+        in_df = input_df[['encounter_block','time_from_vent',val_col]].copy()
+        
+        #Name of new variable
+        if not new_name:
+            new_name = f"{val_col}_{agg_func}"
+    
+        #Flag for agg_func = flag or all
+        or_flag = agg_func == 'flag'
+        if or_flag:
+            agg_func = 'max'
+            in_df[val_col] = in_df[val_col].astype(bool)
+        and_flag = agg_func == 'all'
+        if and_flag:
+            agg_func = 'min'
+            in_df[val_col] = in_df[val_col].astype(bool)
+    
+        #Aggregation step
+        print(f'Aggregation step for {new_name}')
+        agg_df = in_df.groupby(by=['encounter_block','time_from_vent'])[val_col].agg(agg_func).reset_index()
+
+        #Rename column
+        agg_df.rename(columns={val_col:new_name},inplace=True)
+
+        if reorder:
+            agg_df = agg_df.sort_values(self.required_cols)
+        
+        #Spcial situation for "or" and "and" to convert to boolean and back to int to 0 or 1.
+        if or_flag or and_flag:
+            agg_df[new_name] = agg_df[new_name] == 1
+            agg_df[new_name] = agg_df[new_name].astype(int)
+        
+        #Merge onto hourly blocks
+        print(f'Merging step for {new_name}')
+        self.df = pd.merge(self.df,
+                           agg_df,
+                           on=['encounter_block','time_from_vent'],
+                           how='left')
+
+        #Sort and fill
+        if fill_with:
+            print(f'Sort/Fill step for {new_name}')
+            self.hourly_fill(new_name, fill_with)
+
+    def table_summary(self) -> pd.DataFrame:
+        return table_summary(self.df)
+
+    def save(self, suffix:str=''):
+        path = os.path.join(output_folder,'intermediate',f'hourly_df{suffix}.parquet')
+        self.df.to_parquet(path)
+        path = os.path.join(output_folder, 'final',f'hourly_df{suffix}_summary.csv')
+        _summary = self.table_summary()
+        _summary.to_csv(path)
