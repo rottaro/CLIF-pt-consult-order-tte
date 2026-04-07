@@ -148,11 +148,17 @@ co.initialize(
 log(f"Total Number of unique encounters in the hospitalization table: {co.hospitalization.df['hospitalization_id'].nunique()}")
 
 
+# In[4]:
+
+
+co.hospitalization.df.head()
+
+
 # ## Cohort Identification 
 # ### (A) Age Filter
 # ### (B) Stitch Hospitalizations
 
-# In[4]:
+# In[5]:
 
 
 log("\n=== STEP A: Filter by age ===\n")
@@ -188,7 +194,7 @@ log(f"Number of linked hospitalization ids: {strobe_ab['B_before_stitching'] - s
 # - Create waterfall / hourly blocks of respiratory support data. See clifpy documentation for details of everything this entails.
 # - Impute missing FiO2 values
 
-# In[5]:
+# In[6]:
 
 
 log("\n=== STEP C: Load & process respiratory support => Apply Waterfall & Identify IMV usage ===\n")
@@ -291,7 +297,7 @@ log("Missing values in recorded_dttm:", rs_waterfall['recorded_dttm'].isna().sum
 
 # ### (D) Determine ventilation times (start/end) at encounter block level
 
-# In[6]:
+# In[7]:
 
 
 log("\n=== STEP D: Determine ventilation times (start/end) at encounter block level ===\n")
@@ -315,7 +321,7 @@ strobe_d['D_blocks_with_same_vent_start_end'] = _block_same_vent['encounter_bloc
 log(f"Unique encounter blocks with valid IMV start/end: {strobe_d['D_blocks_with_valid_vent']}")
 
 
-# In[7]:
+# In[8]:
 
 
 #Quick aside the start the block_df data frame and to filter our the CO data.
@@ -336,7 +342,7 @@ log(f"01_cohort: ADULT and IMV for >0 hours : Block Length: {len(block_df)}, Enc
 
 # ### (E) Hourly sequence generation BLOCK level
 
-# In[8]:
+# In[9]:
 
 
 log("\n=== STEP E: Hourly sequence generation BLOCK level ===\n")
@@ -497,7 +503,7 @@ log("Unique encounter_blocks:", final_df_block_raw['encounter_block'].nunique())
 
 # ### (F) Exclusion Criteria
 
-# In[9]:
+# In[10]:
 
 
 # Count vent hours per block in first 72 hours
@@ -540,7 +546,7 @@ log(f"Cohort size in hourly blocks: {strobe_excl['F_final_blocks_without_trach_a
 
 # ### (G) PT consult order
 
-# In[10]:
+# In[11]:
 
 
 #load (loading from output since key_icu_orders is not a defined table in CLIFpy and we just created it in the prior script
@@ -596,7 +602,7 @@ print(f"Unique Encounter Block: {block_df['encounter_block'].nunique()}")
 # - Apply filter as noted above
 # - Save progress so far including encounter stitching and cohort sample.
 
-# In[11]:
+# In[12]:
 
 
 #Filter out from final cohort
@@ -630,7 +636,7 @@ log(f"01_cohort: FINAL COHORT: Block Length: {len(block_df)}, Encounter Blocks {
 
 # ### (A) Patient Data
 
-# In[12]:
+# In[13]:
 
 
 _columns_of_interest = ['patient_id','race_category','ethnicity_category','sex_category','death_dttm','language_category']
@@ -647,7 +653,7 @@ for _col in _columns_of_interest:
 # 
 # Unfortunately the CLIF admission_type_category mapping from MIMIC-CLIF does not include whether or not the patient came as an OSH transfer. So we will need to get data direct from MIMIC to determine OSH transfers.
 
-# In[13]:
+# In[14]:
 
 
 _hosp_df = co.hospitalization.df.copy()
@@ -667,7 +673,7 @@ for _col in _columns_of_interest:
 
 # ### (C) Discharge Data
 
-# In[14]:
+# In[15]:
 
 
 _hosp_df = co.hospitalization.df.copy()
@@ -687,7 +693,7 @@ for _col in _columns_of_interest:
 # ### (D) ADT Data
 # - ICU in and out time.
 
-# In[15]:
+# In[16]:
 
 
 #Merge with encounter block
@@ -754,7 +760,7 @@ log(block_df['ICU_type'].value_counts())
 
 # ## Save Data
 
-# In[16]:
+# In[17]:
 
 
 path = os.path.join(output_folder,'intermediate','block_df_1_end.parquet')
@@ -764,7 +770,7 @@ log(f"01_cohort: AFTER DATA COLLECTION: Block Length: {len(block_df)}, Encounter
 
 # ## Flowchart
 
-# In[17]:
+# In[18]:
 
 
 # Merge all strobe dicts

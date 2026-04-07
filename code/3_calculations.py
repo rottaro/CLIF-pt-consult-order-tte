@@ -102,19 +102,11 @@ def compute_consensus_flags(df):
     # Derive helper columns
     df['recorded_hour'] = df['window_start_dttm'].dt.hour
     df['is_weekday'] = df['window_start_dttm'].dt.weekday < 5
-    def _add_last_ne_6h(_group):
-        _group['last_ne_dose_last_6_hours'] = (
-            _group['ne_calc_last']
-            .shift(6)
-            .fillna(0)
-        )
-        return _group
-    df = df.groupby('encounter_block',group_keys=False).apply(_add_last_ne_6h).reset_index(drop=True)
-
+    
     # --- RED flags ---
     df['red_resp_spo2_flag'] = ((df['spo2_min'] < 90) | df['spo2_min'].isna()).astype(int)
     df['red_map_flag'] = ((df['map_mean'] < 65) | df['map_mean'].isna()).astype(int)
-    df['red_high_support_flag'] = (df['ne_calc_last'] > 0.3).astype(int)
+    df['red_high_support_flag'] = ((df['ne_calc_last'] > 0.3) | (df['ne_calc_max'] > 0.3)).astype(int)
     df['red_hypertensive_flag'] = (
         (((df['sbp_max'] > 200) | (df['map_mean'] > 110)) &
         (df['red_med_flag'] == 1))
@@ -129,7 +121,7 @@ def compute_consensus_flags(df):
     df['yellow_peep_flag'] = (df['peep_set_min'] > 10).astype(int)
     df['yellow_map_flag'] = ((df['map_mean'] >= 65) & (df['ne_calc_last'].between(0.1, 0.3))).astype(int)
     df['yellow_pulse_flag'] = (df['heart_rate_min'].between(120, 150)).astype(int)
-    df['yellow_lactate_flag'] = (df['lactate_last'] > 4).astype(int)
+    df['yellow_lactate_flag'] = (df['lactate_max'] > 4).astype(int)
 
     # --- GREEN flags ---
     df['green_resp_spo2_flag'] = ((df['spo2_min'] >= 90) | df['spo2_min'].isna()).astype(int)
@@ -138,7 +130,7 @@ def compute_consensus_flags(df):
     df['green_peep_flag'] = ((df['peep_set_min'] <= 10) | df['peep_set_min'].isna()).astype(int)
     df['green_map_flag'] = (((df['map_mean'] >= 65) & (df['ne_calc_last'] < 0.1)) | df['ne_calc_last'].isna()).astype(int)
     df['green_pulse_flag'] = ((df['heart_rate_min'] < 120) | df['heart_rate_min'].isna()).astype(int)
-    df['green_lactate_flag'] = ((df['lactate_last'] <= 4) | df['lactate_last'].isna()).astype(int)
+    df['green_lactate_flag'] = ((df['lactate_max'] <= 4) | df['lactate_max'].isna()).astype(int)
     df['green_hr_flag'] = ((df['heart_rate_min'] > 40) | df['heart_rate_min'].isna()).astype(int)
 
     # --- Composite flags (shared conditions) ---
@@ -311,6 +303,7 @@ block_df = pd.merge(
     how='left'
 )
 block_df['yellow_0_72h'] = (block_df['yellow_time_eligibility'] <= 72).astype(bool)
+log('Calculated time to Yellow Readiness for Mobilization for at least 1 hour.')
 
 #Total hours in first 24 hours
 block_df = block_df.merge(
@@ -320,6 +313,7 @@ block_df = block_df.merge(
         agg_func='sum'),
     on='encounter_block',
     how='left')
+log('Calculated hours of Yellow Readiness for Mobilization in first 24-hours.')
 
 #Eligibility for all 4 hours of each time_bin
 time_bin.gather_time_bins(yellow_df[['encounter_block','time_bin','yellow']], 'yellow', agg_func='all')
@@ -346,6 +340,7 @@ block_df = pd.merge(
     how='left'
 )
 block_df['yellow_2h_0_72h'] = (block_df['yellow_time_eligibility_2h'] <= 72).astype(bool)
+log('Calculated time to Yellow Readiness for Mobilization for at least 2 hour.')
 
 del grouped_yellow_df, yellow_df
 
@@ -367,6 +362,7 @@ block_df = block_df.merge(
     on='encounter_block',
     how='left')
 del coma_df
+log('Calculated hours of oversedation.')
 
 
 # ## Pressor Data
@@ -386,10 +382,12 @@ block_df = block_df.merge(
         agg_func='flag'),
     on='encounter_block',
     how='left')
+log('Calculated pressor use flag in the first 24-hours.')
 
 #For time bins
 time_bin.gather_time_bins(pressor_df[['encounter_block','time_bin','pressor']], 'pressor', agg_func='flag', fill_with=0)
 del pressor_df
+log('Calculated pressor use flag for time_bins.')
 
 
 # ## Paralytics Data
@@ -412,9 +410,11 @@ block_df = block_df.merge(
 
 #Convert to boolean
 block_df['paralytics_0_24h_>3h'] = block_df['paralytics_0_24h_sum'] > 3
+log('Calculated paralytics use flag for >4 horus in first 24-hours.')
 
 #For time bins
 time_bin.gather_time_bins(para_df, 'paralytics', agg_func='flag')
+log('Calculated paralytics use flag for any amount of time in time_bins.')
 del para_df
 
 
@@ -445,15 +445,10 @@ block_df = pd.merge(
     how='left'
 )
 
-
-# In[10]:
-
-
-del last_vent_df
-del vent_df
 #Get an 1 for patients alive at 28-days.
 block_df['alive28'] = block_df['death_dttm'].isna() | ((block_df['death_dttm'] - block_df['block_vent_start_dttm']).dt.total_seconds() >= (28*24*60*60))
 block_df['alive28'] = block_df['alive28'].astype(int)
+
 #Calcute VFD
 block_df['vent_free_days'] = block_df['alive28'] * (28 - block_df['last_hour_on_vent']/24)
 block_df = block_df.drop(columns=['alive28','last_hour_on_vent'])
@@ -485,7 +480,13 @@ block_df['reintubation'] = (block_df['intubation_count'] > 1)
 hourly.df['vent'] = hourly.df['hourly_on_vent']
 time_bin.gather_time_bins(hourly.df[['encounter_block','time_bin','vent']], 'vent', agg_func='flag')
 
+
+# In[10]:
+
+
 del intubation_count_df
+del last_vent_df
+del vent_df
 
 
 # In[11]:
@@ -506,7 +507,10 @@ del path
 time_bin.remove_based_on_censor('death', keep_first=True)
 #Save (which will save the data as well as a summary of it)
 time_bin.save(suffix='_3_end')
-del time_bin #To save memory
+#Save an additional version as a CSV for R.
+path = os.path.join(output_folder, 'intermediate',"time_bins_3_end.csv")
+time_bin.df.to_csv(path)
+del path
 
 
 # ## Date Time Calculations
@@ -800,4 +804,21 @@ plt.legend()
 path = os.path.join(output_folder, 'final','graphs',"CIF_Yellow_v_PT.png")
 plt.savefig(path)
 plt.show()
+
+
+# ### Merging for Stats
+# Create a merged block_df and time_bin.df to be used for stats.
+
+# In[23]:
+
+
+column_order = column_order.reset_index()
+mask_cols = (column_order['name'] == 'encounter_block') | (column_order['covariate'] == 1) | (column_order['outcome'] == 1) | column_order['other'].notna()
+stats_cols = column_order[mask_cols]
+stats_df = block_df[stats_cols['name'].tolist()].copy()
+stats_df = stats_df.merge(time_bin.df, on='encounter_block', how='inner').reset_index()
+log(f"Stats data set contains {block_df['encounter_block'].nunique()} encounter_blocks.")
+log(f"Stats data set contains {stats_df['encounter_block'].nunique()} encounter_blocks.")
+path = os.path.join(output_folder, 'intermediate',"block_and_time_bins_for_stats.csv")
+stats_df.to_csv(path)
 
