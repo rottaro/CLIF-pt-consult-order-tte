@@ -6,7 +6,7 @@
 #    1. Python  01_cohort.ipynb -> Python
 #    2. Python  02_data_gathering.ipynb -> Python
 #    3. Python  03_calculations.ipynb -> Python
-#    4. R       04_CCW.R
+#    4. R       04_ccw.R
 #
 #  Usage:  bash run_pipeline.sh
 # ════════════════════════════════════════════════════════════════════════════════
@@ -106,8 +106,8 @@ python3 2_data_gathering.py
 log "========== STARTING STEP 3: DATA GATHERING =========="
 python3 3_calculations.py
 
-# R steps
-
+# R step
+R -f 4_ccw.R
 
 log ""
 log "Output files in ${PROJECT_ROOT}/output/final/:"

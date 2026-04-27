@@ -543,6 +543,8 @@ block_df["is_dead_hosp"] = (
     (block_df["death_dttm"] <= block_df["discharge_dttm"]) |
     (block_df["discharge_category"].str.lower().isin(["Hospice", "Expired"]))
 )
+#48 hour mortality (in grace period)
+block_df['is_dead_2'] = (block_df['death_dttm'] - block_df['block_vent_start_dttm']).dt.total_seconds() <= (2*24*60*60)
 #30-day mortality
 block_df['is_dead_30'] = (block_df['death_dttm'] - block_df['block_vent_start_dttm']).dt.total_seconds() <= (30*24*60*60)
 #365-day mortality

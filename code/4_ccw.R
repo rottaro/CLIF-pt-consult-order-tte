@@ -1,3 +1,14 @@
+#!/usr/bin/env Rscript
+# List of required packages
+packages <- c("tidyverse", "pscl", "ggplot2", "dplyr", "openxlsx", "tibble", "cobalt", "this.path")
+
+# Install any packages that are not yet installed
+installed <- packages %in% rownames(installed.packages())
+if (any(!installed)) {
+  install.packages(packages[!installed])
+}
+
+# Load all libraries
 library(tidyverse)
 library(pscl)
 library(ggplot2)
@@ -5,8 +16,15 @@ library(dplyr)
 library(openxlsx)
 library(tibble)
 library(cobalt)
+library(this.path)
 
-data <- read.csv("~/Desktop/jain/CCW/block_and_time_bins_for_stats.csv")
+# Open config file for file path:
+# File paths
+setwd(dirname(this.path()))
+work_dir <- normalizePath("..")
+output_folder <- file.path(work_dir, "output")
+
+data <- read.csv(file.path(output_folder,"intermediate","block_and_time_bins_for_stats.csv"))
 unique(data$pt_pre24_IMV)
 colnames(data)
 
@@ -81,23 +99,33 @@ df_E <- df_E[order(df_E$encounter_block, df_E$time_bin), ]
 
 colSums(is.na(df_E))
 
-form_num <- as.formula(
+form_num_E <- as.formula(
   paste("PT_uncensor_E", "~", "time_bin_f", "+", paste(base_vars, collapse = " + "))
 )
 
 ## denominator model: baseline + time + time-varying
-form_den <- as.formula(
+form_den_E <- as.formula(
   paste("PT_uncensor_E", "~", "time_bin_f", "+",
         paste(c(base_vars, tv_vars), collapse = " + "))
 )
 
-fit_num_N <- glm(form_num, data = df_N, family = binomial())
-fit_den_N <- glm(form_den, data = df_N, family = binomial())
+form_num_N <- as.formula(
+  paste("PT_uncensor_N", "~", "time_bin_f", "+", paste(base_vars, collapse = " + "))
+)
+
+## denominator model: baseline + time + time-varying
+form_den_N <- as.formula(
+  paste("PT_uncensor_N", "~", "time_bin_f", "+",
+        paste(c(base_vars, tv_vars), collapse = " + "))
+)
+
+fit_num_N <- glm(form_num_N, data = df_N, family = binomial())
+fit_den_N <- glm(form_den_N, data = df_N, family = binomial())
 summary(fit_num_N)
 summary(fit_den_N)
 
-fit_num_E <- glm(form_num, data = df_E, family = binomial())
-fit_den_E <- glm(form_den, data = df_E, family = binomial())
+fit_num_E <- glm(form_num_E, data = df_E, family = binomial())
+fit_den_E <- glm(form_den_E, data = df_E, family = binomial())
 summary(fit_num_E)
 summary(fit_den_E)
 
@@ -144,8 +172,8 @@ df_E$SW_final <- res_E$data$SW
 
 
 
-#### Outcome Model ####
-block_df <- read.csv("~/Desktop/jain/CCW/block_for_stats.csv")
+#### Outcome Model
+block_df <- read.csv(file.path(output_folder,"intermediate","block_for_stats.csv"))
 colnames(block_df)
 
 block_df <- block_df[block_df$pt_pre24_IMV=="False", ]
@@ -220,7 +248,7 @@ p_balance <- love.plot(bal_ccw, stats = "mean.diffs", abs = TRUE,
                        title = "Baseline Covariate Balance Before and After IPCW")
 print(p_balance)
 
-ggsave("~/Desktop/jain/CCW/balance_plot_with_RASS.pdf", plot = p_balance,
+ggsave(file.path(output_folder,"final","graphs","balance_plot_with_RASS.pdf"), plot = p_balance,
        width = 8, height = 6)
 
 rhs <- paste(c("clone", base_vars), collapse = " + ")
@@ -269,7 +297,7 @@ g <- ggplot(outcome_df, aes(x = weight, fill = clone)) +
        y = "Count",
        fill = "Clone Group")
 g
-ggsave("~/Desktop/jain/CCW/SW_plot_no_RASS.pdf", plot = g, width = 7, height = 5)
+ggsave(file.path(output_folder,"final","graphs","SW_plot_no_RASS.pdf"), plot = g, width = 7, height = 5)
 
 extract_glm_table <- function(fit, model_name) {
   sm <- summary(fit)$coefficients
@@ -351,5 +379,5 @@ addWorksheet(wb, "1Year")
 writeData(wb, "1Year", tab_dead_365)
 addWorksheet(wb, "Predicted_Contrast")
 writeData(wb, "Predicted_Contrast", pred_contrast_tab)
-saveWorkbook(wb, file = "~/Desktop/jain/CCW/ccw_results_no_RASS.xlsx", overwrite = TRUE)
+saveWorkbook(wb, file = file.path(output_folder,"final","ccw_results.xlsx"), overwrite = TRUE)
 

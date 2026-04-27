@@ -56,14 +56,6 @@ output_folder = os.path.join(work_dir,'output')
 with open(os.path.join(work_dir,'config','config.json'), 'r') as file:
     config = json.load(file)
 
-#Load ClifOrchestrator
-co = clifpy.ClifOrchestrator(
-    data_directory=config['clif_folder'],
-    filetype=config['file_type'],
-    timezone=config['time_zone'],
-    output_directory=output_folder
-)
-
 
 # In[2]:
 
@@ -133,6 +125,14 @@ _logger.addHandler(_ch)
 def log(*args, **kwargs):
     _msg = ' '.join(str(a) for a in args)
     _logger.info(_msg)
+
+#Load ClifOrchestrator
+co = clifpy.ClifOrchestrator(
+    data_directory=config['clif_folder'],
+    filetype=config['file_type'],
+    timezone=config['time_zone'],
+    output_directory=output_folder
+)
 
 log(f"=== CLIF Pipeline 01: Cohort Identification ===")
 log(f"Site: {config['site_name']}")

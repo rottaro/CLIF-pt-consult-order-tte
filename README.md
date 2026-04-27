@@ -22,9 +22,11 @@
 
 ## Running Pipeline
 
-1. **Download This Repository**
+1. **Requires**: `Python` and `R`. The Jupyter notebooks are converted to just Python so Jupyter itself is not required. Uses Python environments for dependencies.
 
-2. **Update Config**:
+2. **Download This Repository**
+
+3. **Update Config**:
 
 - Open `config/config.json`
 - Fill out the site_name, clif_folder path and time_zone. A MIMIC folder path will only be used if the site name string contains mimic (ie. MIMIC-CLIF)

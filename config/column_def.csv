@@ -1,4 +1,4 @@
-﻿name,description,covariate,outcome,other
+name,description,covariate,outcome,other
 encounter_block,Identifier,0,0,Identifier
 age,Age (years),1,0,
 sex_category,Sex,1,0,
@@ -46,6 +46,7 @@ imv_to_discharge_days,Post-IMV Hospital Length of Stay (days),0,0,
 discharge_category,Discharge Disposition,0,0,
 icu_los_days,ICU Length of Stay (days),0,1,
 is_dead,Overall Mortality,0,0,
+is_dead_2,Mortality within 48 hours,0,0,
 is_dead_hosp,Hospital Mortality,0,1,
 is_dead_30,30-day Mortality,0,1,
 is_dead_365,1-year Mortality,0,1,
