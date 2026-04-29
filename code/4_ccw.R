@@ -1,3 +1,13 @@
+# List of required packages
+packages <- c("tidyverse", "pscl", "ggplot2", "dplyr", "openxlsx", "tibble", "cobalt", "this.path")
+
+# Install any packages that are not yet installed
+installed <- packages %in% rownames(installed.packages())
+if (any(!installed)) {
+  install.packages(packages[!installed])
+}
+
+# Load all libraries
 library(tidyverse)
 library(pscl)
 library(ggplot2)
@@ -5,8 +15,14 @@ library(dplyr)
 library(openxlsx)
 library(tibble)
 library(cobalt)
+library(this.path)
 
-data <- read.csv("~/Desktop/jain/CCW/block_and_time_bins_for_stats.csv")
+# File paths
+setwd(dirname(this.path()))
+work_dir <- normalizePath("..")
+output_folder <- file.path(work_dir, "output")
+
+data <- read.csv(file.path(output_folder, "intermediate", "block_and_time_bins_for_stats.csv"))
 unique(data$pt_pre24_IMV)
 colnames(data)
 
@@ -171,7 +187,7 @@ p_ipcw_time <- ggplot(ipcw_long, aes(x = time_bin_f, y = IPCW, fill = clone)) +
   theme_bw() +
   labs(title = "Trajectory of Unstabilized IPCW Over Time", x = "Time bin",
        y = "Unstabilized IPCW", fill = "Clone")
-ggsave("~/Desktop/jain/CCW/plots/original_IPCW_trajectory.pdf",
+ggsave(file.path(output_folder, "final", "graphs", "original_IPCW_trajectory.pdf"),
        plot = p_ipcw_time, width = 8, height = 5)
 
 p_ipcw_time1 <- ggplot(ipcw_long, aes(x = time_bin_f, y = IPCW_trim, fill = clone)) +
@@ -180,12 +196,12 @@ p_ipcw_time1 <- ggplot(ipcw_long, aes(x = time_bin_f, y = IPCW_trim, fill = clon
   theme_bw() +
   labs(title = "Trajectory of Unstabilized IPCW Over Time", x = "Time bin",
        y = "Trimmed unstabilized IPCW", fill = "Clone")
-ggsave("~/Desktop/jain/CCW/plots/trim_IPCW_trajectory.pdf",
+ggsave(file.path(output_folder, "final", "graphs", "trim_IPCW_trajectory.pdf"),
        plot = p_ipcw_time1, width = 8, height = 5)
 
 
 #### Outcome Model ####
-block_df <- read.csv("~/Desktop/jain/CCW/block_for_stats.csv")
+block_df <- read.csv(file.path(output_folder, "intermediate", "block_for_stats.csv"))
 colnames(block_df)
 
 block_df <- block_df[block_df$pt_pre24_IMV=="False", ]
@@ -237,14 +253,14 @@ g <- ggplot(outcome_df, aes(x = weight, fill = clone)) +
   theme_bw() + 
   labs(title = "Distribution of final weights by clone",
        x = "Final weight", y = "Count", fill = "Clone Group")
-ggsave("~/Desktop/jain/CCW/plots/original_final_IPCW.pdf", plot = g, width = 7, height = 5)
+ggsave(file.path(output_folder, "final", "graphs", "original_final_IPCW.pdf"), plot = g, width = 7, height = 5)
 
 g1 <- ggplot(outcome_df, aes(x = weight_trim, fill = clone)) + 
   geom_histogram(bins = 60, alpha = 0.5, position = "identity") + 
   theme_bw() + 
   labs(title = "Distribution of final weights by clone",
        x = "Final weight", y = "Count", fill = "Clone Group")
-ggsave("~/Desktop/jain/CCW/plots/trim_final_IPCW.pdf", plot = g1, width = 7, height = 5)
+ggsave(file.path(output_folder, "final", "graphs", "trim_final_IPCW.pdf"), plot = g1, width = 7, height = 5)
 
 
 ##### Baseline Covariate Balance Check #####
@@ -260,7 +276,7 @@ p_balance <- love.plot(bal_ccw, stats = "mean.diffs", abs = TRUE,
                        stars = "raw", sample.names = c("Unweighted", "Weighted"),
                        title = "Baseline Covariate Balance Before and After IPCW")
 print(p_balance)
-ggsave("~/Desktop/jain/CCW/plots/balance_plot_IPCW.pdf", plot = p_balance,
+ggsave(file.path(output_folder, "final", "graphs", "balance_plot_IPCW.pdf"), plot = p_balance,
        width = 8, height = 6)
 
 
@@ -369,5 +385,5 @@ addWorksheet(wb, "1Year")
 writeData(wb, "1Year", tab_dead_365)
 addWorksheet(wb, "Predicted_Contrast")
 writeData(wb, "Predicted_Contrast", pred_contrast_tab)
-saveWorkbook(wb, file = "~/Desktop/jain/CCW/ccw_IPCW_results.xlsx", overwrite = TRUE)
+saveWorkbook(wb, file = file.path(output_folder, "final", "ccw_IPCW_results.xlsx"), overwrite = TRUE)
 
