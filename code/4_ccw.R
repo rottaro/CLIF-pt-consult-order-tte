@@ -1,14 +1,3 @@
-#!/usr/bin/env Rscript
-# List of required packages
-packages <- c("tidyverse", "pscl", "ggplot2", "dplyr", "openxlsx", "tibble", "cobalt", "this.path")
-
-# Install any packages that are not yet installed
-installed <- packages %in% rownames(installed.packages())
-if (any(!installed)) {
-  install.packages(packages[!installed])
-}
-
-# Load all libraries
 library(tidyverse)
 library(pscl)
 library(ggplot2)
@@ -16,15 +5,8 @@ library(dplyr)
 library(openxlsx)
 library(tibble)
 library(cobalt)
-library(this.path)
 
-# Open config file for file path:
-# File paths
-setwd(dirname(this.path()))
-work_dir <- normalizePath("..")
-output_folder <- file.path(work_dir, "output")
-
-data <- read.csv(file.path(output_folder,"intermediate","block_and_time_bins_for_stats.csv"))
+data <- read.csv("~/Desktop/jain/CCW/block_and_time_bins_for_stats.csv")
 unique(data$pt_pre24_IMV)
 colnames(data)
 
@@ -80,55 +62,42 @@ base_vars <- c("age", "sex_category", "race_category", "ethnicity_category",
 
 # Time-varying covariates
 tv_vars <- c("heart_rate_mean", "map_mean", "fio2_set_mean", "peep_set_mean", 
-             "RASS_min","pressor_flag", "paralytics_flag")
+             "pressor_flag", "paralytics_flag")
 
-##### Clone N #####
+##### Clone N 
 df_N$PT_uncensor_N <- 1-df_N$PT_censor_N
 vars_all_N <- c("PT_uncensor_N", "time_bin_f", base_vars, tv_vars)
+#colSums(is.na(df_N))
 df_N <- df_N[complete.cases(df_N[, vars_all_N]), ]
 df_N <- df_N[order(df_N$encounter_block, df_N$time_bin), ]
 
-colSums(is.na(df_N))
-
-
-##### Clone E #####
+##### Clone E 
 df_E$PT_uncensor_E <- 1-df_E$PT_censor_E
 vars_all_E <- c("PT_uncensor_E", "time_bin_f", base_vars, tv_vars)
+#colSums(is.na(df_E))
 df_E <- df_E[complete.cases(df_E[, vars_all_E]), ]
 df_E <- df_E[order(df_E$encounter_block, df_E$time_bin), ]
 
-colSums(is.na(df_E))
 
-form_num_E <- as.formula(
-  paste("PT_uncensor_E", "~", "time_bin_f", "+", paste(base_vars, collapse = " + "))
-)
+##### Unstabilized Weights #####
+# Clone N
+form_N <- as.formula(paste("PT_uncensor_N", "~", "time_bin_f", "+",
+                         paste(c(base_vars, tv_vars), collapse = " + ")))
+fit_N <- glm(form_N, data = df_N, family = binomial())
+summary(fit_N)
+df_N$p_uncens <- predict(fit_N, newdata = df_N, type = "response")
+df_N$IPCW <- ave(1/df_N$p_uncens, df_N[["encounter_block"]], FUN = cumprod)
 
-## denominator model: baseline + time + time-varying
-form_den_E <- as.formula(
-  paste("PT_uncensor_E", "~", "time_bin_f", "+",
-        paste(c(base_vars, tv_vars), collapse = " + "))
-)
+# Clone E
+form_E <- as.formula(paste("PT_uncensor_E", "~", "time_bin_f", "+",
+                         paste(c(base_vars, tv_vars), collapse = " + ")))
+fit_E <- glm(form_E, data = df_E, family = binomial())
+summary(fit_E)
+df_E$p_uncens <- predict(fit_E, newdata = df_E, type = "response")
+df_E$IPCW <- ave(1/df_E$p_uncens, df_E[["encounter_block"]], FUN = cumprod)
 
-form_num_N <- as.formula(
-  paste("PT_uncensor_N", "~", "time_bin_f", "+", paste(base_vars, collapse = " + "))
-)
 
-## denominator model: baseline + time + time-varying
-form_den_N <- as.formula(
-  paste("PT_uncensor_N", "~", "time_bin_f", "+",
-        paste(c(base_vars, tv_vars), collapse = " + "))
-)
-
-fit_num_N <- glm(form_num_N, data = df_N, family = binomial())
-fit_den_N <- glm(form_den_N, data = df_N, family = binomial())
-summary(fit_num_N)
-summary(fit_den_N)
-
-fit_num_E <- glm(form_num_E, data = df_E, family = binomial())
-fit_den_E <- glm(form_den_E, data = df_E, family = binomial())
-summary(fit_num_E)
-summary(fit_den_E)
-
+##### Stabilized weights #####
 run_ccw <- function(data, response_var, base_vars, tv_vars, 
                     id_var = "encounter_block", time_factor_var = "time_bin_f") {
   df <- data
@@ -139,22 +108,15 @@ run_ccw <- function(data, response_var, base_vars, tv_vars,
   )
   
   ## denominator model: baseline + time + time-varying
-  form_den <- as.formula(
-    paste(response_var, "~", time_factor_var, "+",
-          paste(c(base_vars, tv_vars), collapse = " + "))
-  )
-  
+  form_den <- as.formula(paste(response_var, "~", time_factor_var, "+",
+                               paste(c(base_vars, tv_vars), collapse = " + ")))
   fit_num <- glm(form_num, data = df, family = binomial())
   fit_den <- glm(form_den, data = df, family = binomial())
   
-  ## predicted probabilities
   df$p_num <- predict(fit_num, newdata = df, type = "response")
   df$p_den <- predict(fit_den, newdata = df, type = "response")
-  
-  ## one-step stabilized factor
+
   df$sw_step <- df$p_num / df$p_den
-  
-  ## cumulative stabilized weight by encounter
   df$SW <- ave(df$sw_step, df[[id_var]], FUN = cumprod)
 
   list(data = df, fit_num = fit_num, fit_den = fit_den)
@@ -170,10 +132,60 @@ res_E <- run_ccw(data = df_E, response_var = "PT_uncensor_E", base_vars = base_v
 df_E$sw_step <- res_E$data$sw_step
 df_E$SW_final <- res_E$data$SW
 
+##### Final Weights #####
+make_final_weight <- function(dat, clone_label, censor_col, weights) {
+  dat %>%
+    group_by(encounter_block) %>%
+    # Grab the final observed time-bin for this clone
+    slice_tail(n = 1) %>% 
+    # Keep ONLY if they successfully completed the strategy (uncensored)
+    filter(!!sym(censor_col) == 0) %>% 
+    ungroup() %>%
+    dplyr::select(encounter_block, weights) %>%
+    rename(weight = weights) %>%
+    mutate(clone = clone_label)
+}
+# unstablized weights
+w_E <- make_final_weight(df_E, "E", "PT_censor_E", "IPCW")
+w_N <- make_final_weight(df_N, "N", "PT_censor_N", "IPCW")
+
+# stablized weights
+sw_E <- make_final_weight(df_E, "E", "PT_censor_E", "SW_final")
+sw_N <- make_final_weight(df_N, "N", "PT_censor_N", "SW_final")
+
+# Visualize IPCW trajectory over 12 time bins
+ipcw_long <- bind_rows(
+  df_N %>% mutate(clone = "N"),
+  df_E %>% mutate(clone = "E")) %>%
+  filter(!is.na(IPCW), is.finite(IPCW), IPCW > 0) %>%
+  mutate(clone = factor(clone, levels = c("N", "E")),
+         time_bin_f = factor(time_bin, levels = sort(unique(time_bin))))
+
+ipcw_cut <- quantile(ipcw_long$IPCW, probs = c(0.01, 0.99), na.rm = TRUE)
+ipcw_long <- ipcw_long %>%
+  mutate(IPCW_trim = pmin(pmax(IPCW, ipcw_cut[[1]]), ipcw_cut[[2]]))
+
+p_ipcw_time <- ggplot(ipcw_long, aes(x = time_bin_f, y = IPCW, fill = clone)) +
+  geom_boxplot(outlier.alpha = 0.25, outlier.size = 0.8,
+               position = position_dodge(width = 0.75)) +
+  theme_bw() +
+  labs(title = "Trajectory of Unstabilized IPCW Over Time", x = "Time bin",
+       y = "Unstabilized IPCW", fill = "Clone")
+ggsave("~/Desktop/jain/CCW/plots/original_IPCW_trajectory.pdf",
+       plot = p_ipcw_time, width = 8, height = 5)
+
+p_ipcw_time1 <- ggplot(ipcw_long, aes(x = time_bin_f, y = IPCW_trim, fill = clone)) +
+  geom_boxplot(outlier.alpha = 0.25, outlier.size = 0.8,
+               position = position_dodge(width = 0.75)) +
+  theme_bw() +
+  labs(title = "Trajectory of Unstabilized IPCW Over Time", x = "Time bin",
+       y = "Trimmed unstabilized IPCW", fill = "Clone")
+ggsave("~/Desktop/jain/CCW/plots/trim_IPCW_trajectory.pdf",
+       plot = p_ipcw_time1, width = 8, height = 5)
 
 
-#### Outcome Model
-block_df <- read.csv(file.path(output_folder,"intermediate","block_for_stats.csv"))
+#### Outcome Model ####
+block_df <- read.csv("~/Desktop/jain/CCW/block_for_stats.csv")
 colnames(block_df)
 
 block_df <- block_df[block_df$pt_pre24_IMV=="False", ]
@@ -190,33 +202,6 @@ block_df$ICU_type[block_df$ICU_type == ""] <- NA
 
 for (v in fac_vars) { block_df[[v]] <- as.factor(block_df[[v]]) }
 
-# Get one final weight per encounter for each clone
-#make_final_weight <- function(dat, clone_label) {
-#  dat %>%
-#    group_by(encounter_block) %>%
-#    slice_tail(n = 1) %>%
-#    ungroup() %>%
-#    select(encounter_block, SW_final) %>%
-#    rename(weight = SW_final) %>%
-#    mutate(clone = clone_label)
-#}
-
-make_final_weight <- function(dat, clone_label, censor_col) {
-  dat %>%
-    group_by(encounter_block) %>%
-    # Grab the final observed time-bin for this clone
-    slice_tail(n = 1) %>% 
-    # Keep ONLY if they successfully completed the strategy (uncensored)
-    filter(!!sym(censor_col) == 0) %>% 
-    ungroup() %>%
-    select(encounter_block, SW_final) %>%
-    rename(weight = SW_final) %>%
-    mutate(clone = clone_label)
-}
-
-w_E <- make_final_weight(df_E, "E", "PT_censor_E")
-w_N <- make_final_weight(df_N, "N", "PT_censor_N")
-
 outcome_df <- bind_rows(
   block_df %>% mutate(clone = "E") %>% left_join(w_E, by = c("encounter_block", "clone")),
   block_df %>% mutate(clone = "N") %>% left_join(w_N, by = c("encounter_block", "clone"))
@@ -224,20 +209,48 @@ outcome_df <- bind_rows(
   mutate(clone = factor(clone, levels = c("N", "E"))) 
 
 summary(outcome_df$weight)
+quantile(outcome_df$weight, c(0, .01, .05, .25, .5, .75, .95, .99, 1), na.rm=T)
+table(outcome_df$clone)
 sum(is.na(outcome_df$weight))
 sum(!is.finite(outcome_df$weight))
 
-# Subset data first
+# remove missingness
 missing_weights <- outcome_df[is.na(outcome_df$weight), ]
 tapply(missing_weights$encounter_block, missing_weights$clone, function(x) length(unique(x)))
 
 outcome_df <- outcome_df %>%
   filter(!is.na(weight), is.finite(weight), weight > 0)
 
-#### Baseline Covariate Balance Check ####
+# trim weight
+w_cut <- quantile(outcome_df$weight, probs = c(0.01, 0.99), na.rm = TRUE)
+w_lower <- w_cut[[1]]
+w_upper <- w_cut[[2]]
+
+outcome_df <- outcome_df %>%
+  mutate(weight_trim = pmin(pmax(weight, w_cut[[1]]), w_cut[[2]]))
+summary(outcome_df$weight_trim)
+quantile(outcome_df$weight_trim, probs = c(0, .01, .05, .25, .5, .75, .95, .99, 1))
+
+# Overall final unstabilized weights distribution
+g <- ggplot(outcome_df, aes(x = weight, fill = clone)) + 
+  geom_histogram(bins = 60, alpha = 0.5, position = "identity") + 
+  theme_bw() + 
+  labs(title = "Distribution of final weights by clone",
+       x = "Final weight", y = "Count", fill = "Clone Group")
+ggsave("~/Desktop/jain/CCW/plots/original_final_IPCW.pdf", plot = g, width = 7, height = 5)
+
+g1 <- ggplot(outcome_df, aes(x = weight_trim, fill = clone)) + 
+  geom_histogram(bins = 60, alpha = 0.5, position = "identity") + 
+  theme_bw() + 
+  labs(title = "Distribution of final weights by clone",
+       x = "Final weight", y = "Count", fill = "Clone Group")
+ggsave("~/Desktop/jain/CCW/plots/trim_final_IPCW.pdf", plot = g1, width = 7, height = 5)
+
+
+##### Baseline Covariate Balance Check #####
 # balance table
 bal_ccw <- bal.tab(x = outcome_df[, base_vars], treat = outcome_df$clone,
-                   weights = outcome_df$weight, method = "weighting",
+                   weights = outcome_df$weight_trim, method = "weighting",
                    estimand = "ATE", s.d.denom = "pooled", un = TRUE)
 print(bal_ccw)
 
@@ -247,58 +260,38 @@ p_balance <- love.plot(bal_ccw, stats = "mean.diffs", abs = TRUE,
                        stars = "raw", sample.names = c("Unweighted", "Weighted"),
                        title = "Baseline Covariate Balance Before and After IPCW")
 print(p_balance)
-
-ggsave(file.path(output_folder,"final","graphs","balance_plot_with_RASS.pdf"), plot = p_balance,
+ggsave("~/Desktop/jain/CCW/plots/balance_plot_IPCW.pdf", plot = p_balance,
        width = 8, height = 6)
 
-rhs <- paste(c("clone", base_vars), collapse = " + ")
-form_base <- as.formula(paste("~ clone +", paste(base_vars, collapse = " + ")))
-# Or simplest version: form_base <- ~ clone
 
-##### VFD: Zero-inflated NB #####
-fit_vent <- zeroinfl(as.formula(paste("vent_free_days ~", rhs, "| 1")), 
-                     data = outcome_df, dist = "negbin", weights = weight)
-summary(fit_vent)
+##### VFD: ZINB #####
+fit_vfd <- zeroinfl(vent_free_days ~ clone | 1, data = outcome_df, 
+                     dist = "negbin", weights = weight_trim)
+summary(fit_vfd)
+
 
 ##### ICU LOS: Poisson #####
-fit_icu_los <- glm(as.formula(paste("icu_los_days ~", rhs)), data = outcome_df,
-                   family = poisson(), weights = weight)
+fit_icu_los <- glm(icu_los_days ~ clone, data = outcome_df,
+                   family = poisson(), weights = weight_trim)
 summary(fit_icu_los)
 
 
 ##### Hospital mortality: Binary #####
-fit_dead_hosp <- glm(as.formula(paste("is_dead_hosp ~", rhs)), data = outcome_df,
-                     family = binomial(), weights = weight)
+fit_dead_hosp <- glm(is_dead_hosp~clone, data = outcome_df, family = binomial(), weights = weight_trim)
 summary(fit_dead_hosp)
 
 
 ##### 30-day mortality: Binary #####
-fit_dead_30 <- glm(as.formula(paste("is_dead_30 ~", rhs)), data = outcome_df,
-                   family = binomial(), weights = weight)
+fit_dead_30 <- glm(is_dead_30~clone, data = outcome_df, family = binomial(), weights = weight_trim)
 summary(fit_dead_30)
 
 
 ##### 1-year mortality: Binary #####
-fit_dead_365 <- glm(as.formula(paste("is_dead_365 ~", rhs)), data = outcome_df,
-                    family = binomial(), weights = weight)
+fit_dead_365 <- glm(is_dead_365~clone, data = outcome_df, family = binomial(), weights = weight_trim)
 summary(fit_dead_365)
 
 
 #### Results Organization ####
-summary(outcome_df$weight)
-table(outcome_df$clone)
-quantile(outcome_df$weight, probs = c(0, .01, .05, .25, .5, .75, .95, .99, 1), na.rm = TRUE)
-
-g <- ggplot(outcome_df, aes(x = weight, fill = clone)) + 
-  geom_histogram(bins = 60, alpha = 0.5, position = "identity") + 
-  theme_bw() + 
-  labs(title = "Distribution of final stabilized weights by clone",
-       x = "Final stabilized weight", 
-       y = "Count",
-       fill = "Clone Group")
-g
-ggsave(file.path(output_folder,"final","graphs","SW_plot_no_RASS.pdf"), plot = g, width = 7, height = 5)
-
 extract_glm_table <- function(fit, model_name) {
   sm <- summary(fit)$coefficients
   out <- as.data.frame(sm)
@@ -333,7 +326,7 @@ extract_zeroinfl_table <- function(fit, model_name) {
   bind_rows(out_count, out_zero)
 }
 
-tab_vfd <- extract_zeroinfl_table(fit_vent, "vent_free_days")
+tab_vfd <- extract_zeroinfl_table(fit_vfd, "vent_free_days")
 tab_icu_los <- extract_glm_table(fit_icu_los, "icu_los_days")
 tab_dead_hosp <- extract_glm_table(fit_dead_hosp, "is_dead_hosp")
 tab_dead_30 <- extract_glm_table(fit_dead_30, "is_dead_30")
@@ -349,16 +342,13 @@ standardized_contrast <- function(fit, data, outcome_name, clone_var = "clone") 
   pred_E <- predict(fit, newdata = dE, type = "response")
   pred_N <- predict(fit, newdata = dN, type = "response")
   
-  tibble(
-    outcome = outcome_name,
-    mean_pred_E = mean(pred_E, na.rm = TRUE),
-    mean_pred_N = mean(pred_N, na.rm = TRUE),
-    diff_E_minus_N = mean(pred_E, na.rm = TRUE) - mean(pred_N, na.rm = TRUE),
-    ratio_E_over_N = mean(pred_E, na.rm = TRUE) / mean(pred_N, na.rm = TRUE)
-  )
+  tibble(outcome = outcome_name, mean_pred_E = mean(pred_E, na.rm = TRUE),
+         mean_pred_N = mean(pred_N, na.rm = TRUE),
+         diff_E_minus_N = mean(pred_E, na.rm = TRUE) - mean(pred_N, na.rm = TRUE),
+         ratio_E_over_N = mean(pred_E, na.rm = TRUE) / mean(pred_N, na.rm = TRUE))
 }
 
-pred_vfd <- standardized_contrast(fit_vent, outcome_df, "vent_free_days")
+pred_vfd <- standardized_contrast(fit_vfd, outcome_df, "vent_free_days")
 pred_icu <- standardized_contrast(fit_icu_los, outcome_df, "icu_los_days")
 pred_hosp <- standardized_contrast(fit_dead_hosp, outcome_df, "is_dead_hosp")
 pred_30 <- standardized_contrast(fit_dead_30, outcome_df, "is_dead_30")
@@ -379,5 +369,5 @@ addWorksheet(wb, "1Year")
 writeData(wb, "1Year", tab_dead_365)
 addWorksheet(wb, "Predicted_Contrast")
 writeData(wb, "Predicted_Contrast", pred_contrast_tab)
-saveWorkbook(wb, file = file.path(output_folder,"final","ccw_results.xlsx"), overwrite = TRUE)
+saveWorkbook(wb, file = "~/Desktop/jain/CCW/ccw_IPCW_results.xlsx", overwrite = TRUE)
 
