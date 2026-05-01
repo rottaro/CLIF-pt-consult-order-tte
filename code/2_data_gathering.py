@@ -544,15 +544,8 @@ del sofa_input_df, sofa_df, sofa_wide
 
 
 # ## Convert Wide to Hourly Data
-# PROBLEM:
-# Conversion from wide to hourly as of now has a bug where 'last' takes the last value regardless of wether it is NA or not.
-# This is generating missingness.
-# SOLUTION:
-# Foward and back fill any columns in which we want 'last' grouped by encounter_block and hour.
-# Only hourly time windows in which there is truly no data there will be NA.
-# Unfortunately this is a very inefficient process with a long compute time.
 
-# In[39]:
+# In[17]:
 
 
 agg_plan = {
@@ -562,48 +555,20 @@ agg_plan = {
     'mean':['map']
 }
 
-log('Starting filling in of wide data frame to work around last aggregation creating false missingness.')
-_temp_wide = co.wide_df.copy()
-_temp_wide['temp_hour'] = _temp_wide['event_time'].dt.floor('h')
-_temp_wide = _temp_wide.sort_values(by='event_time')
-_grouped = _temp_wide.groupby(['encounter_block', 'temp_hour'])
-log('-- Grouping created.')
-# ffill/bfill within each group
-for col in agg_plan['last']:
-    log(f'-- Started col: {col}')
-    _temp_wide[col] = (_grouped[col].transform(lambda x: x.ffill().bfill()))
-    log(f'-- Finished col: {col}')
-_temp_wide = _temp_wide.reset_index(drop=True)
-_temp_wide.drop(columns=['temp_hour'], inplace=True)
-log('-- Finished filling in')
-
-
-# In[42]:
-
-
-log(f"New Wide Data Set Device Category NA: {sum(_temp_wide['device_category'].isna())}")
-log(f"Old Wide Data Set Device Category NA: {sum(co.wide_df['device_category'].isna())}")
-
-
-# In[43]:
-
-
-co.wide_df = _temp_wide.copy()
-del _temp_wide, _grouped
 _temp_hourly_df = co.convert_wide_to_hourly(agg_plan,
                                             id_name='encounter_block',
                                             hourly_window=1,
                                             fill_gaps=True)
 
 
-# In[44]:
+# In[18]:
 
 
 log('Hourly_df created with columns:\n',_temp_hourly_df.dtypes)
 log('Encounters in hourly_df:\n',_temp_hourly_df['encounter_block'].nunique())
 
 
-# In[45]:
+# In[19]:
 
 
 #Missing summary before filling anything in.
@@ -617,35 +582,45 @@ _temp_hourly_df['time_from_vent'] = _temp_hourly_df['time_from_vent'].astype(int
 hourly = helper.hourly_blocks(in_df=_temp_hourly_df)
 
 
-# In[46]:
+# ### Fix 'last' missingness
+# PROBLEM:
+# Conversion from wide to hourly as of now has a bug where 'last' takes the last value regardless of wether it is NA or not.
+# This is generating missingness.
+# 
+# SOLUTION:
+# Individualy fix those after creation of the hourly_df.
+# 
+# An issue on GitHub has been created for this, however as of April 30, 2026 it remains open. [clifpy issue 131](https://github.com/Common-Longitudinal-ICU-data-Format/clifpy/issues/131)
+
+# In[20]:
+
+
+for last_col in agg_plan['last']:
+    new_name = f"{last_col}_last"
+    log(f"Fixing missingness of {new_name}")
+    last_df = co.wide_df[co.wide_df[last_col].notna()].copy()
+    last_df = last_df.merge(block_df[['encounter_block','block_vent_start_dttm']], on='encounter_block',how='left')
+    last_df['time_from_vent'] = np.ceil((last_df['event_time'] - last_df['block_vent_start_dttm']).dt.total_seconds()/3600)
+    last_df['time_from_vent'] = last_df['time_from_vent'].astype(int)
+    log(f"-- Sort step")
+    last_df = last_df.sort_values(by=['encounter_block','event_time'])[['encounter_block','time_from_vent',last_col]]
+    log(f"-- Agg step")
+    last_df = last_df.groupby(['encounter_block','time_from_vent'])[last_col].agg('last').reset_index()
+    last_df.rename(columns={last_col:new_name},inplace=True)
+    hourly.df.drop(columns=[new_name],inplace=True)
+    log(f"-- Merge step")
+    hourly.df = hourly.df.merge(last_df, on=['encounter_block','time_from_vent'],how='left')
+
+
+# In[21]:
 
 
 co.wide_df.dtypes
 
 
-# In[47]:
-
-
-hourly.df[hourly.df['encounter_block'] > 97].head()
-
-
-# In[48]:
-
-
-'''
-#DEBUGGIN CODE
-_h = hourly.df[hourly.df['device_category_last'].notna() & hourly.df['device_category_last'].str.contains('imv', case=False)]
-_eb_vents = set(_h['encounter_block'].tolist())
-_h = hourly.df[~ hourly.df['encounter_block'].isin(_eb_vents)]
-_eb_off = set(_h['encounter_block'].tolist())
-_w = co.wide_df[co.wide_df['encounter_block'].isin(_eb_off)]
-_w[['encounter_block','event_time','device_category']].head(30)
-'''
-
-
 # ### Forward and back fill
 
-# In[49]:
+# In[22]:
 
 
 #Forward Fill from last for max rows
@@ -689,7 +664,7 @@ hourly.hourly_fill('peep_set_min','bffill')
 
 # ### Create some binary flags and rename come columns
 
-# In[50]:
+# In[23]:
 
 
 _col_rename = {
@@ -708,7 +683,7 @@ hourly.df['paralytics_flag'] = hourly.df['paralytics_flag'].astype(int)
 # ### RASS
 # For some reason patient assessments do not seem to properly load into the wide data set so will add them the hourly manually.
 
-# In[51]:
+# In[24]:
 
 
 #Load assessments
@@ -723,7 +698,7 @@ rass_df['time_from_vent'] = hourly.calc_time_from_vent(rass_df['time_diff'])
 hourly.addto_blocks(rass_df,'RASS',agg_func='min', fill_with='bffill')
 
 
-# In[52]:
+# In[25]:
 
 
 #Define coma
@@ -734,7 +709,7 @@ del rass_df
 
 # ### Save
 
-# In[53]:
+# In[26]:
 
 
 #Remove negative time.
@@ -746,7 +721,7 @@ log('Completed hourly.df and saved sumary')
 
 # ## Time Bins and Other Aggregation
 
-# In[54]:
+# In[27]:
 
 
 #Create Time Bin Object
@@ -758,11 +733,31 @@ death_df['time_diff'] = death_df['death_dttm'] - death_df['block_vent_start_dttm
 time_bin.add_event(death_df[['encounter_block','time_diff']], 'death')
 del death_df
 
+
+# In[28]:
+
+
 #Add PT consult
 pt_df = block_df[['encounter_block','block_vent_start_dttm','pt_post_imv_dttm']].copy().drop_duplicates()
 pt_df['time_diff'] = pt_df['pt_post_imv_dttm'] - pt_df['block_vent_start_dttm']
+pt_df.sort_values(by=['encounter_block','time_diff'], inplace=True)
+pt_df['time_bin'] = time_bin.classify_time_bin(pt_df['time_diff'])
+pt_df = pt_df[pt_df['time_bin'].notna()][['encounter_block','time_bin','time_diff']]
+pt_df.drop_duplicates(subset=['encounter_block'], keep='first', inplace=True) 
 time_bin.add_event(pt_df[['encounter_block','time_diff']], 'pt_order')
+#Now add the pt_now column to help with censoring models.
+pt_df['pt_now'] = 1
+time_bin.df = pd.merge(
+    time_bin.df,
+    pt_df,
+    on=['encounter_block','time_bin'],
+    how='left')
+time_bin.bin_sort_fill('pt_now',0)
 del pt_df
+
+
+# In[29]:
+
 
 #Create time columns for the wide data set
 co.wide_df = co.wide_df.merge(block_df[['encounter_block','block_vent_start_dttm']].copy().drop_duplicates(), on='encounter_block',how='left')
@@ -778,7 +773,7 @@ log(f'Finished creating time bins. Shape: {time_bin.df.shape}')
 # It added pre-intubation vital signs for about 10% of encounters but we still had 40% missingness so this portion of the code was removed.
 # It can still be found in old versions of the code as needed.
 
-# In[55]:
+# In[30]:
 
 
 ##HEART RATE
@@ -795,7 +790,7 @@ log(f"Missing heart rate at time_bin level: {sum(time_bin.df['heart_rate_mean'].
 del hr_df
 
 
-# In[56]:
+# In[31]:
 
 
 ##MAP
@@ -814,7 +809,7 @@ del map_df
 
 # ### Respiratory Support Table
 
-# In[57]:
+# In[32]:
 
 
 #FiO2
@@ -831,7 +826,7 @@ log(f"Missing FiO2 at time_bin level: {sum(time_bin.df['fio2_set_mean'].isna())}
 del fio2_df
 
 
-# In[58]:
+# In[33]:
 
 
 #PEEP
@@ -850,13 +845,13 @@ del peep_df
 
 # ### Patient Assessments
 
-# In[59]:
+# In[34]:
 
 
 co.patient_assessments.df['time_bin'] = time_bin.classify_time_bin(co.patient_assessments.df['time_diff'])
 
 
-# In[60]:
+# In[35]:
 
 
 #RASS
@@ -874,7 +869,7 @@ log(f"Missing RASS at time bin level: {sum(time_bin.df['RASS_min'].isna())}")
 del rass_df
 
 
-# In[61]:
+# In[36]:
 
 
 #Braden Mobility Score
@@ -906,7 +901,7 @@ log(f"Missing braden (ICU last) at block level: {sum(block_df['braden_mobility_l
 del braden_df
 
 
-# In[62]:
+# In[37]:
 
 
 #CAM-ICU
@@ -923,7 +918,7 @@ del cam_df
 
 # ### Save
 
-# In[63]:
+# In[38]:
 
 
 #FIRST SAVING POINT
@@ -945,7 +940,7 @@ del time_bin #To save memory
 # 
 # Note that this uses either ICD 9 or ICD 10 codes for any given encounter_block. There was a hard switch at some point so there should actually NO encounters with both ICD codes mixed.
 
-# In[64]:
+# In[39]:
 
 
 #If we need to convert admission year from MIMIC date to real dates.
@@ -984,7 +979,7 @@ print(f"Block Length: {len(block_df)}")
 print(f"Unique Encounter Block: {block_df['encounter_block'].nunique()}")
 
 
-# In[65]:
+# In[40]:
 
 
 #Elixhauser
@@ -1046,7 +1041,7 @@ elix_10_df = comorbidipy.comorbidity(
 )
 
 
-# In[66]:
+# In[41]:
 
 
 #Concatenate both types
@@ -1076,7 +1071,7 @@ block_df = block_df.fillna(value={'elixhauser':0,'elixhauser_age_adj':0})
 
 # ## Save
 
-# In[67]:
+# In[42]:
 
 
 #LAST SAVING POINT

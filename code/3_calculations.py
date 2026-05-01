@@ -13,7 +13,7 @@
 
 # ## Setup
 
-# In[54]:
+# In[1]:
 
 
 ### Import
@@ -67,7 +67,7 @@ time_bin = helper.time_bins(in_name='time_bin_step_2')
 hourly = helper.hourly_blocks(in_name='hourly_df_two')
 
 
-# In[55]:
+# In[2]:
 
 
 _logger = logging.getLogger('clif_01')
@@ -95,7 +95,7 @@ log(f"Site: {config['site_name']}")
 # 
 # Uses hourly data frame built earlier along with algorithm by Kaveri. Original code seen here: [CLIF-eligibility-for-mobilization](https://github.com/Common-Longitudinal-ICU-data-Format/CLIF-eligibility-for-mobilization/blob/main/code/02_mobilization_analysis.py)
 
-# In[56]:
+# In[3]:
 
 
 def compute_consensus_flags(df):
@@ -268,7 +268,7 @@ def compute_consensus_flags(df):
 hourly.df = compute_consensus_flags(hourly.df)
 
 
-# In[57]:
+# In[4]:
 
 
 hourly.save(suffix='_w_mob')
@@ -280,7 +280,7 @@ hourly.df['time_bin'] = time_bin.classify_time_bin(hourly.df['time_diff'])
 # ## Time to mobilization
 # Use mobilization data to get a few variables.
 
-# In[58]:
+# In[5]:
 
 
 yellow_df = hourly.df.rename(columns={'any_yellow_or_green_no_red_all_hours':'yellow'}).copy()
@@ -348,7 +348,7 @@ del grouped_yellow_df, yellow_df
 # ## Oversedation
 # Based on 'coma' which was defined by RASS < -2 in the second notebook.
 
-# In[59]:
+# In[6]:
 
 
 coma_df = hourly.df[['encounter_block','time_diff','coma']].copy()
@@ -367,7 +367,7 @@ log('Calculated hours of oversedation.')
 
 # ## Pressor Data
 
-# In[60]:
+# In[7]:
 
 
 #Pressor indicator
@@ -392,7 +392,7 @@ log('Calculated pressor use flag for time_bins.')
 
 # ## Paralytics Data
 
-# In[61]:
+# In[8]:
 
 
 #Paralytics indicator
@@ -420,7 +420,7 @@ del para_df
 
 # ## Ventilator Data
 
-# In[62]:
+# In[9]:
 
 
 ###VENT FREE DAYS
@@ -481,7 +481,7 @@ hourly.df['vent'] = hourly.df['hourly_on_vent']
 time_bin.gather_time_bins(hourly.df[['encounter_block','time_bin','vent']], 'vent', agg_func='flag')
 
 
-# In[63]:
+# In[10]:
 
 
 del intubation_count_df
@@ -489,7 +489,7 @@ del last_vent_df
 del vent_df
 
 
-# In[64]:
+# In[11]:
 
 
 #SAVING POINT
@@ -500,7 +500,7 @@ del path
 
 # ## Close Time Bins Data Set
 
-# In[65]:
+# In[12]:
 
 
 #Censor out dead data
@@ -515,7 +515,7 @@ del path
 
 # ## Date Time Calculations
 
-# In[66]:
+# In[13]:
 
 
 #Change relevant DTTM values to hours/days
@@ -556,7 +556,7 @@ block_df['is_dead_365'] = (block_df['death_dttm'] - block_df['block_vent_start_d
 
 # ### Language
 
-# In[67]:
+# In[14]:
 
 
 log("LANGUAGE PRE:")
@@ -572,7 +572,7 @@ log(block_df['language_category'].value_counts(dropna=False)) #log results
 
 # ### Race
 
-# In[68]:
+# In[15]:
 
 
 log("RACE PRE:")
@@ -587,7 +587,7 @@ log(block_df['race_category'].value_counts(dropna=False)) #log results
 
 # ### Ethnicity
 
-# In[69]:
+# In[16]:
 
 
 #This just converts "Unknown" to None for better missingness tracking.
@@ -597,7 +597,7 @@ block_df["ethnicity_category"] = np.where(set_mask, block_df['ethnicity_category
 
 # ### ICU Type
 
-# In[70]:
+# In[17]:
 
 
 log("ICU TYPE PRE:")
@@ -623,7 +623,7 @@ log(block_df['ICU_type'].value_counts(dropna=False))
 
 # ### Admission Category
 
-# In[71]:
+# In[18]:
 
 
 log("ADMISSION PRE:")
@@ -643,7 +643,7 @@ log(block_df['admission_type_category'].value_counts(dropna=False))
 
 # ### Discharge Category
 
-# In[72]:
+# In[19]:
 
 
 log("DISCHARGE PRE:")
@@ -670,7 +670,7 @@ log("DISCHARGE POST:")
 log(block_df['discharge_category'].value_counts(dropna=False))
 
 
-# In[73]:
+# In[20]:
 
 
 #Column check point
@@ -680,7 +680,7 @@ helper.missing_summary(block_df,f_name='block_df_3_end')
 # ## Remove obersvations with prior PT order
 # Remove any `encounter_block` from both `block_df` and `time_bin.df` where `pt_pre24_IMV` == `True`.
 
-# In[74]:
+# In[21]:
 
 
 #Exclusion criteria
@@ -691,7 +691,7 @@ time_bin.df = time_bin.df[time_bin.df['encounter_block'].isin(block_df['encounte
 
 # ## Organize Columns and Summarize
 
-# In[75]:
+# In[22]:
 
 
 import scipy.stats as stats
@@ -791,7 +791,7 @@ with open(file_path, mode="w") as file:
 
 # ## CIF Graph
 
-# In[76]:
+# In[23]:
 
 
 import matplotlib.pyplot as plt
@@ -819,7 +819,7 @@ plt.close()
 
 # ## Time Bin Summary Graphs
 
-# In[80]:
+# In[24]:
 
 
 pt_time_bin_df = time_bin.df.groupby('bin_start')['pt_order'].agg('sum').reset_index()
@@ -842,7 +842,7 @@ plt.close()
 # ## Merging for Stats
 # Create a merged block_df and time_bin.df to be used for stats.
 
-# In[78]:
+# In[25]:
 
 
 column_order = column_order.reset_index()

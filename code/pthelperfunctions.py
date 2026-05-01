@@ -100,7 +100,6 @@ def table_summary(in_df:pd.DataFrame) -> pd.DataFrame:
     cols = sum_df.iloc[0]
     sum_df = sum_df.iloc[1:]
     sum_df.columns = cols
-    sum_df['mean'] = sum_df['mean'].astype(float).round(3)
     return sum_df
 
 #time_bins object
