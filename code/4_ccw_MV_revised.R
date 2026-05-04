@@ -201,9 +201,9 @@ fit_interval_weights <- function(clone_df,
         
         if (is.null(fit)) {
           # Fallback: use empirical proportion of censoring as the probability
-          bin_data$p_stab   <- mean(bin_data[[censor_col]], na.rm = TRUE)
+          bin_data$p_stab   <- 1 - mean(bin_data[[censor_col]], na.rm = TRUE)
         } else {
-          bin_data$p_stab   <- predict(fit, newdata = bin_data, type = "response")
+          bin_data$p_stab   <- 1 - predict(fit, newdata = bin_data, type = "response")
         }
       } else {
         bin_data$p_stab <- 1
@@ -237,7 +237,7 @@ fit_interval_weights <- function(clone_df,
     }
 
     results_list[[i]] <- bin_data[, c("encounter_block", "time_bin",
-                                      "p_cens", "p_uncens", "interval_wt")]
+                                      "p_cens", "p_uncens", "p_stab", "interval_wt")]
   }
 
   # Combine all bins
