@@ -26,12 +26,12 @@
 
 # ---- Packages ----------------------------------------------------------------
 packages <- c("tidyverse", "pscl", "ggplot2", "dplyr", "openxlsx",
-              "tibble", "cobalt", "this.path")
+              "tibble", "cobalt", "this.path", "glue")
 
 installed <- packages %in% rownames(installed.packages())
 if (any(!installed)) install.packages(packages[!installed])
 
-library(tidyverse); library(pscl); library(ggplot2); library(dplyr)
+library(tidyverse); library(pscl); library(ggplot2); library(dplyr); library(glue)
 library(openxlsx); library(tibble); library(cobalt); library(this.path)
 
 # ---- Paths -------------------------------------------------------------------
@@ -130,7 +130,8 @@ fit_interval_weights <- function(clone_df,
                                  censor_col,   # "PT_censor_N" or "PT_censor_E"
                                  base_vars,
                                  tv_vars,
-                                 pt_now_logic = FALSE) {
+                                 pt_now_logic = FALSE,
+                                 stabilize = FALSE) {
   # pt_now_logic = TRUE  → Clone E weighting (use pt_now flag)
   # pt_now_logic = FALSE → Clone N weighting (always 1/p_uncens when uncensored)
 
@@ -138,6 +139,10 @@ fit_interval_weights <- function(clone_df,
   form        <- as.formula(paste(censor_col, "~", rhs_formula))
 
   time_bins <- sort(unique(clone_df$time_bin))
+  
+  # Stabilized weights
+  rhs_stab <- paste(c(base_vars), collapse = " + ")
+  form_stab <- as.formula(paste(censor_col, "~", rhs_stab))
 
   # We will collect one row per (encounter_block × time_bin) with its interval
   # weight.  Using a list then rbinding is memory-efficient.
@@ -160,13 +165,14 @@ fit_interval_weights <- function(clone_df,
       # Assign weight = 1 for uncensored, 0 for censored (no model needed)
       bin_data$p_cens   <- as.numeric(bin_data[[censor_col]])
       bin_data$p_uncens <- 1 - bin_data$p_cens
+      bin_data$p_stab <- 1
     } else {
       # Fit the GLM for this time_bin
       # Response: P(censored at t)  — following Webster-Clark's formulation
       fit <- tryCatch(
         glm(form, data = bin_data, family = binomial(link = "logit")),
         error = function(e) {
-          message(sprintf("GLM failed for time_bin %d (%s). Defaulting to raw mean.",
+          message(sprintf("GLM failed for time_bin %d (%s) probability. Defaulting to raw mean.",
                           tb, censor_col))
           NULL
         }
@@ -180,6 +186,28 @@ fit_interval_weights <- function(clone_df,
         bin_data$p_cens   <- predict(fit, newdata = bin_data, type = "response")
         bin_data$p_uncens <- 1 - bin_data$p_cens
       }
+      #STABILIZATION STEP
+      if (stabilize) {
+        # Fit the GLM for this time_bin
+        # Response: P(censored at t)  — using fix covariates only
+        fit <- tryCatch(
+          glm(form_stab, data = bin_data, family = binomial(link = "logit")),
+          error = function(e) {
+            message(sprintf("GLM failed for time_bin %d (%s) stabilization numerator. Defaulting to raw mean.",
+                            tb, censor_col))
+            NULL
+          }
+        )
+        
+        if (is.null(fit)) {
+          # Fallback: use empirical proportion of censoring as the probability
+          bin_data$p_stab   <- mean(bin_data[[censor_col]], na.rm = TRUE)
+        } else {
+          bin_data$p_stab   <- predict(fit, newdata = bin_data, type = "response")
+        }
+      } else {
+        bin_data$p_stab <- 1
+      }
     }
 
     # ---- Assign interval weight ----------------------------------------------
@@ -189,7 +217,7 @@ fit_interval_weights <- function(clone_df,
       # Censored rows:   weight = 0
       bin_data$interval_wt <- ifelse(
         bin_data[[censor_col]] == 0,
-        1 / bin_data$p_uncens,
+        bin_data$p_stab / bin_data$p_uncens,
         0
       )
     } else {
@@ -202,7 +230,7 @@ fit_interval_weights <- function(clone_df,
       # censored (regardless of pt_now): weight = 0.
       bin_data$interval_wt <- case_when(
         bin_data[[censor_col]] == 1              ~  0,                         # censored → 0
-        bin_data[[censor_col]] == 0 & bin_data$pt_now == 1 ~ 1 / bin_data$p_uncens,  # just started PT → upweight
+        bin_data[[censor_col]] == 0 & bin_data$pt_now == 1 ~ bin_data$p_stab / bin_data$p_uncens,  # just started PT → upweight
         bin_data[[censor_col]] == 0 & bin_data$pt_now == 0 ~ 1,               # not yet started, still in study → 1
         TRUE                                     ~  NA_real_
       )
@@ -237,7 +265,8 @@ weights_N <- fit_interval_weights(
   censor_col   = "PT_censor_N",
   base_vars    = base_vars,
   tv_vars      = tv_vars,
-  pt_now_logic = FALSE      # Clone N: always 1/P(uncensored) when uncensored
+  pt_now_logic = FALSE,
+  stabilize = TRUE
 )
 
 message("Fitting per-time-bin GLMs for Clone E ...")
@@ -246,7 +275,8 @@ weights_E <- fit_interval_weights(
   censor_col   = "PT_censor_E",
   base_vars    = base_vars,
   tv_vars      = tv_vars,
-  pt_now_logic = TRUE       # Clone E: apply pt_now (recentstart) logic
+  pt_now_logic = FALSE,
+  stabilize = TRUE
 )
 
 # Merge weights back onto the clone data frames for downstream use/diagnostics
