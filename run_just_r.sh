@@ -48,8 +48,8 @@ else
   fi
 
   log "========== STARTING STEP 5: CCW =========="
-  if Rscript code/5_ccw.R; then
-    log "Step 5: CCW ran successfully"
+  if Rscript code/5_ccw_survival.R; then
+    log "Step 5: CCW_survival ran successfully"
   else
     log "${RED}Step 5: CCW FAILED${RESET}"
     exit 1

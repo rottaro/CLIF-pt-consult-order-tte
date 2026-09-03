@@ -7,7 +7,7 @@
 #    2. Python  02_data_gathering.ipynb -> Python
 #    3. Python  03_calculations.ipynb -> Python
 #    4. R       04_table_one.R
-#    5. R       05_ccw.R
+#    5. R       05_ccw_survival.R
 #
 #  Usage:  bash run_pipeline.sh
 # ════════════════════════════════════════════════════════════════════════════════
@@ -75,8 +75,8 @@ else
   fi
 
   log "========== STARTING STEP 5: CCW =========="
-  if Rscript code/5_ccw.R; then
-    log "Step 5: CCW ran successfully"
+  if Rscript code/5_ccw_survival.R; then
+    log "Step 5: CCW Survival ran successfully"
   else
     log "${RED}Step 5: CCW FAILED${RESET}"
     exit 1
