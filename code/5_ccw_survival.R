@@ -45,8 +45,8 @@ Sys.time()
 sessionInfo()
 
 #----- Options -----------------------------------------------------------------
-resample_N <- 10 #Effective bootstrapping resamples.
-run_sub_group <- FALSE
+resample_N <- 500 #Effective bootstrapping resamples.
+run_sub_group <- TRUE
 input_file_path <- file.path(output_folder, "intermediate",
                              "block_and_time_bins_for_stats.parquet")
 use_recent_start_logic <- FALSE
@@ -83,7 +83,7 @@ data[fac_vars] <- lapply(data[fac_vars], function(x) {
 # ---- Binaries --------------------------------
 binary_vars <- c("pressor_flag", "paralytics_flag",
                  "is_dead", "is_dead_hosp", "is_dead_2", "is_dead_30", "is_dead_365",
-                 "pt_order", "pt_now")
+                 "pt_order", "pt_now","is_dead_icu","pt_post48_IMV")
 to_binary <- function(x, col_name) {
   if (is.logical(x)) {
     out <- as.integer(x)
@@ -163,20 +163,23 @@ bin_df$icu_fg_time <-  pmin(bin_df$icu_los_first_days, icu_los_horizon)
 # =============================================================================
 separate_complete_frames <- function(df,
                                      vars_needed = all_covars){
-  vars_needed_N <- c("PT_censor_N", vars_needed)
-  df_N <- df[complete.cases(df[, vars_needed_N]), ]
+  
+  # List of encounter blocks with at least one missing variable
+  bad_mask <- !complete.cases(df[, vars_needed, drop = FALSE])
+  bad_blocks <-  unique(df$encounter_block[bad_mask])
+  good_df <- df[!(df$encounter_block %in% bad_blocks), ]
+  good_df <- good_df[order(good_df$encounter_block, good_df$time_bin), ]
+  
+  df_N <- good_df
   df_N$clone <- factor("N", levels = c("N", "E"))
-  df_N <- df_N[order(df_N$encounter_block, df_N$time_bin), ]
   #Keep uncensored row or rows where the censoring event happens.
   df_N <- df_N %>% filter( (PT_censor_N == 0) | (pt_now == 1))
 
-  vars_needed_E <- c("PT_censor_E", vars_needed)
-  df_E <- df[complete.cases(df[, vars_needed_E]), ]
-  df_E <- df_E[order(df_E$encounter_block, df_E$time_bin), ]
+  df_E <- good_df
   df_E$clone <- factor("E", levels = c("N", "E"))
   #All censoring occurs on the last time_bin so no need to filter.
   
-  return(list(clones_N = df_N,clones_E = df_E))
+  return(list(clones_N = df_N,clones_E = df_E, bad_blocks = bad_blocks))
   
 }
 # =============================================================================
@@ -376,6 +379,7 @@ clone_and_weight <- function(bin_data, log_summary = FALSE) {
   
   #Quick weight analytics
   if (log_summary) {
+    print(paste("Blocks removed for missing data: ",length(clone_frames$bad_blocks)))
     print(paste("Missing weights: ",sum(is.na(out_df$IPCW))))
     print(paste("Infinite weights: ",sum(!is.finite(out_df$IPCW))))
     print(paste("Zero weights: ",sum(out_df$IPCW == 0)))
@@ -486,8 +490,8 @@ standardized_contrast <- function(fit, data, clone_var = "clone") {
   dN[[clone_var]] <- factor("N", levels = levels(data[[clone_var]]))
   pred_E <- predict(fit, newdata = dE, type = "response")
   pred_N <- predict(fit, newdata = dN, type = "response")
-  pred <- tibble(mean_pred_E    = mean(pred_E, na.rm = TRUE),
-         mean_pred_N    = mean(pred_N, na.rm = TRUE))
+  pred <- tibble(mean_pred_E    = weighted.mean(pred_E, w = data$IPCW, na.rm = TRUE),
+         mean_pred_N    = weighted.mean(pred_N, w = data$IPCW, na.rm = TRUE))
   
   return(pred)
 }
@@ -611,6 +615,14 @@ model_outcomes <- function(sample_df, iteration_n, type_reg = "MV", trimmed_weig
     trim_text <- "original"
   }
   
+  #Testing for non-parametric values in the Fine-Gray model should
+  #only be done on the first original sample
+  if (iteration_n == 0) {
+    n_sim <- resample_N
+  } else {
+    n_sim <- 0
+  }
+  
   #Models declared globally so they can be reviewed for the original sample.
   ##### VFD: ZINB #####
   fit_vfd       <<- zeroinfl(as.formula(paste("vent_free_days ~", mv_rhs, "| 1")),
@@ -679,7 +691,7 @@ model_outcomes <- function(sample_df, iteration_n, type_reg = "MV", trimmed_weig
     as.formula(paste("Event(dc_fg_time,dc_fg_cause) ~", mv_rhs_timereg)),
     data    = as.data.frame(sample_df),
     cause   = 1,       #Per FG variables definitions above.
-    n.sim   = 5000,
+    n.sim   = n_sim,
     model   = "prop",
     weights = sample_df$IPCW
   )
@@ -713,7 +725,7 @@ model_outcomes <- function(sample_df, iteration_n, type_reg = "MV", trimmed_weig
     as.formula(paste("Event(icu_fg_time,icu_fg_cause) ~", mv_rhs_timereg)),
     data    = as.data.frame(sample_df),
     cause   = 1,       #Per FG variables definitions above.
-    n.sim   = 5000,
+    n.sim   = n_sim,
     model   = "prop",
     weights = sample_df$IPCW
   )
@@ -751,27 +763,27 @@ model_outcomes <- function(sample_df, iteration_n, type_reg = "MV", trimmed_weig
   
   #Calculate differences and odd-ratios
   output_df$VFD_diff <- output_df$VFD_E - output_df$VFD_N
-  output_df$VFD_OR <- output_df$VFD_E / output_df$VFD_N
+  output_df$VFD_RR <- output_df$VFD_E / output_df$VFD_N
   output_df$ICU_LOS_diff <- output_df$ICU_LOS_E - output_df$ICU_LOS_N
-  output_df$ICU_LOS_OR <- output_df$ICU_LOS_E / output_df$ICU_LOS_N
+  output_df$ICU_LOS_RR <- output_df$ICU_LOS_E / output_df$ICU_LOS_N
   output_df$dead_hosp_diff <- output_df$dead_hosp_E - output_df$dead_hosp_N
-  output_df$dead_hosp_OR <- output_df$dead_hosp_E / output_df$dead_hosp_N
+  output_df$dead_hosp_RR <- output_df$dead_hosp_E / output_df$dead_hosp_N
   output_df$dead_30_diff <- output_df$dead_30_E - output_df$dead_30_N
-  output_df$dead_30_OR <- output_df$dead_30_E / output_df$dead_30_N
+  output_df$dead_30_RR <- output_df$dead_30_E / output_df$dead_30_N
   output_df$dead_365_diff <- output_df$dead_365_E - output_df$dead_365_N
-  output_df$dead_365_OR <- output_df$dead_365_E / output_df$dead_365_N
+  output_df$dead_365_RR <- output_df$dead_365_E / output_df$dead_365_N
   output_df$dead_FG_surv_30_diff <- output_df$dead_FG_surv_30_E - output_df$dead_FG_surv_30_N
-  output_df$dead_FG_surv_30_OR <- output_df$dead_FG_surv_30_E / output_df$dead_FG_surv_30_N
+  output_df$dead_FG_surv_30_RR <- output_df$dead_FG_surv_30_E / output_df$dead_FG_surv_30_N
   output_df$dead_FG_timeint_30_diff <- output_df$dead_FG_timeint_30_E - output_df$dead_FG_timeint_30_N
-  output_df$dead_FG_timeint_30_OR <- output_df$dead_FG_timeint_30_E / output_df$dead_FG_timeint_30_N
+  output_df$dead_FG_timeint_30_RR <- output_df$dead_FG_timeint_30_E / output_df$dead_FG_timeint_30_N
   output_df$dead_FG_timereg_30_diff <- output_df$dead_FG_timereg_30_E - output_df$dead_FG_timereg_30_N
-  output_df$dead_FG_timereg_30_OR <- output_df$dead_FG_timereg_30_E / output_df$dead_FG_timereg_30_N
+  output_df$dead_FG_timereg_30_RR <- output_df$dead_FG_timereg_30_E / output_df$dead_FG_timereg_30_N
   output_df$icu_FG_surv_10_diff <- output_df$icu_FG_surv_10_E - output_df$icu_FG_surv_10_N
-  output_df$icu_FG_surv_10_OR <- output_df$icu_FG_surv_10_E / output_df$icu_FG_surv_10_N
+  output_df$icu_FG_surv_10_RR <- output_df$icu_FG_surv_10_E / output_df$icu_FG_surv_10_N
   output_df$icu_FG_timeint_10_diff <- output_df$icu_FG_timeint_10_E - output_df$icu_FG_timeint_10_N
-  output_df$icu_FG_timeint_10_OR <- output_df$icu_FG_timeint_10_E / output_df$icu_FG_timeint_10_N
+  output_df$icu_FG_timeint_10_RR <- output_df$icu_FG_timeint_10_E / output_df$icu_FG_timeint_10_N
   output_df$icu_FG_timereg_10_diff <- output_df$icu_FG_timereg_10_E - output_df$icu_FG_timereg_10_N
-  output_df$icu_FG_timereg_10_OR <- output_df$icu_FG_timereg_10_E / output_df$icu_FG_timereg_10_N
+  output_df$icu_FG_timereg_10_RR <- output_df$icu_FG_timereg_10_E / output_df$icu_FG_timereg_10_N
   
   return(output_df)
 }
@@ -807,8 +819,8 @@ get_marginal_curve <- function(fit, data, times, clone_var = "clone",
   }
   tibble(
     time   = times,
-    pred_E = as.numeric(colMeans(cif_E, na.rm = TRUE)),
-    pred_N = as.numeric(colMeans(cif_N, na.rm = TRUE))
+    pred_E = apply(cif_E, 2, weighted.mean, w = data$IPCW, na.rm = TRUE),
+    pred_N = apply(cif_N, 2, weighted.mean, w = data$IPCW, na.rm = TRUE)
   )
 }
 
